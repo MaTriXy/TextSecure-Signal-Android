@@ -6,8 +6,8 @@ import android.database.sqlite.SQLiteStatement;
 import android.os.Environment;
 import android.util.Log;
 
-import org.whispersystems.textsecure.crypto.MasterCipher;
-import org.whispersystems.textsecure.crypto.MasterSecret;
+import org.thoughtcrime.securesms.crypto.MasterCipher;
+import org.thoughtcrime.securesms.crypto.MasterSecret;
 import org.thoughtcrime.securesms.recipients.RecipientFactory;
 import org.thoughtcrime.securesms.recipients.RecipientFormattingException;
 import org.thoughtcrime.securesms.recipients.Recipients;
@@ -61,6 +61,9 @@ public class PlaintextBackupImporter {
           SQLiteStatement statement  = db.createInsertStatement(transaction);
 
           if (item.getAddress() == null || item.getAddress().equals("null"))
+            continue;
+
+          if (!isAppropriateTypeForImport(item.getType()))
             continue;
 
           addStringToStatement(statement, 1, item.getAddress());
@@ -120,5 +123,14 @@ public class PlaintextBackupImporter {
   private static void addLongToStatement(SQLiteStatement statement, int index, long value) {
     statement.bindLong(index, value);
   }
+
+  private static boolean isAppropriateTypeForImport(long theirType) {
+    long ourType = SmsDatabase.Types.translateFromSystemBaseType(theirType);
+
+    return ourType == MmsSmsColumns.Types.BASE_INBOX_TYPE ||
+           ourType == MmsSmsColumns.Types.BASE_SENT_TYPE ||
+           ourType == MmsSmsColumns.Types.BASE_SENT_FAILED_TYPE;
+  }
+
 
 }

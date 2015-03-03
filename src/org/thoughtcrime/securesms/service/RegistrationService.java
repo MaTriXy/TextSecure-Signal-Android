@@ -14,16 +14,24 @@ import com.google.android.gms.gcm.GoogleCloudMessaging;
 
 import org.thoughtcrime.securesms.R;
 import org.thoughtcrime.securesms.crypto.IdentityKeyUtil;
-import org.thoughtcrime.securesms.push.PushServiceSocketFactory;
+import org.thoughtcrime.securesms.crypto.MasterSecret;
+import org.thoughtcrime.securesms.crypto.PreKeyUtil;
+import org.thoughtcrime.securesms.database.DatabaseFactory;
+import org.thoughtcrime.securesms.jobs.GcmRefreshJob;
+import org.thoughtcrime.securesms.push.TextSecureCommunicationFactory;
+import org.thoughtcrime.securesms.recipients.Recipient;
+import org.thoughtcrime.securesms.recipients.RecipientFactory;
+import org.thoughtcrime.securesms.recipients.RecipientFormattingException;
 import org.thoughtcrime.securesms.util.DirectoryHelper;
 import org.thoughtcrime.securesms.util.TextSecurePreferences;
-import org.whispersystems.textsecure.crypto.IdentityKey;
-import org.whispersystems.textsecure.crypto.MasterSecret;
-import org.whispersystems.textsecure.crypto.PreKeyUtil;
-import org.whispersystems.textsecure.push.ExpectationFailedException;
-import org.whispersystems.textsecure.push.PushServiceSocket;
-import org.whispersystems.textsecure.storage.PreKeyRecord;
-import org.whispersystems.textsecure.util.Util;
+import org.thoughtcrime.securesms.util.Util;
+import org.whispersystems.libaxolotl.IdentityKeyPair;
+import org.whispersystems.libaxolotl.state.PreKeyRecord;
+import org.whispersystems.libaxolotl.state.SignedPreKeyRecord;
+import org.whispersystems.libaxolotl.util.KeyHelper;
+import org.whispersystems.libaxolotl.util.guava.Optional;
+import org.whispersystems.textsecure.api.TextSecureAccountManager;
+import org.whispersystems.textsecure.api.push.exceptions.ExpectationFailedException;
 
 import java.io.IOException;
 import java.util.List;
@@ -151,9 +159,9 @@ public class RegistrationService extends Service {
     MasterSecret masterSecret = intent.getParcelableExtra("master_secret");
 
     try {
-      PushServiceSocket socket = PushServiceSocketFactory.create(this, number, password);
+      TextSecureAccountManager accountManager = TextSecureCommunicationFactory.createManager(this, number, password);
 
-      handleCommonRegistration(masterSecret, socket, number);
+      handleCommonRegistration(masterSecret, accountManager, number);
 
       markAsVerified(number, password, signalingKey);
 
@@ -178,7 +186,7 @@ public class RegistrationService extends Service {
     int          registrationId = TextSecurePreferences.getLocalRegistrationId(this);
 
     if (registrationId == 0) {
-      registrationId = Util.generateRegistrationId();
+      registrationId = KeyHelper.generateRegistrationId(false);
       TextSecurePreferences.setLocalRegistrationId(this, registrationId);
     }
 
@@ -189,14 +197,14 @@ public class RegistrationService extends Service {
       initializeChallengeListener();
 
       setState(new RegistrationState(RegistrationState.STATE_CONNECTING, number));
-      PushServiceSocket socket = PushServiceSocketFactory.create(this, number, password);
-      socket.createAccount(false);
+      TextSecureAccountManager accountManager = TextSecureCommunicationFactory.createManager(this, number, password);
+      accountManager.requestSmsVerificationCode();
 
       setState(new RegistrationState(RegistrationState.STATE_VERIFYING, number));
       String challenge = waitForChallenge();
-      socket.verifyAccount(challenge, signalingKey, true, registrationId);
+      accountManager.verifyAccount(challenge, signalingKey, true, registrationId);
 
-      handleCommonRegistration(masterSecret, socket, number);
+      handleCommonRegistration(masterSecret, accountManager, number);
       markAsVerified(number, password, signalingKey);
 
       setState(new RegistrationState(RegistrationState.STATE_COMPLETE, number));
@@ -222,24 +230,33 @@ public class RegistrationService extends Service {
     }
   }
 
-  private void handleCommonRegistration(MasterSecret masterSecret, PushServiceSocket socket, String number)
+  private void handleCommonRegistration(MasterSecret masterSecret, TextSecureAccountManager accountManager, String number)
       throws IOException
   {
     setState(new RegistrationState(RegistrationState.STATE_GENERATING_KEYS, number));
-    IdentityKey        identityKey = IdentityKeyUtil.getIdentityKey(this);
-    List<PreKeyRecord> records     = PreKeyUtil.generatePreKeys(this, masterSecret);
-    PreKeyRecord       lastResort  = PreKeyUtil.generateLastResortKey(this, masterSecret);
-    socket.registerPreKeys(identityKey, lastResort, records);
+    try {
+      Recipient          self         = RecipientFactory.getRecipientsFromString(this, number, false).getPrimaryRecipient();
+      IdentityKeyPair    identityKey  = IdentityKeyUtil.getIdentityKeyPair(this, masterSecret);
+      List<PreKeyRecord> records      = PreKeyUtil.generatePreKeys(this, masterSecret);
+      PreKeyRecord       lastResort   = PreKeyUtil.generateLastResortKey(this, masterSecret);
+      SignedPreKeyRecord signedPreKey = PreKeyUtil.generateSignedPreKey(this, masterSecret, identityKey);
+      accountManager.setPreKeys(identityKey.getPublicKey(),lastResort, signedPreKey, records);
 
-    setState(new RegistrationState(RegistrationState.STATE_GCM_REGISTERING, number));
+      setState(new RegistrationState(RegistrationState.STATE_GCM_REGISTERING, number));
 
-    String gcmRegistrationId = GoogleCloudMessaging.getInstance(this).register("312334754206");
-    TextSecurePreferences.setGcmRegistrationId(this, gcmRegistrationId);
-    socket.registerGcmId(gcmRegistrationId);
+      String gcmRegistrationId = GoogleCloudMessaging.getInstance(this).register(GcmRefreshJob.REGISTRATION_ID);
+      accountManager.setGcmId(Optional.of(gcmRegistrationId));
 
-    DirectoryHelper.refreshDirectory(this, socket, number);
+      TextSecurePreferences.setGcmRegistrationId(this, gcmRegistrationId);
+      TextSecurePreferences.setWebsocketRegistered(this, true);
 
-    DirectoryRefreshListener.schedule(this);
+      DatabaseFactory.getIdentityDatabase(this).saveIdentity(masterSecret, self.getRecipientId(), identityKey.getPublicKey());
+      DirectoryHelper.refreshDirectory(this, accountManager, number);
+
+      DirectoryRefreshListener.schedule(this);
+    } catch (RecipientFormattingException e) {
+      throw new IOException(e);
+    }
   }
 
   private synchronized String waitForChallenge() throws AccountVerificationTimeoutException {
@@ -278,6 +295,7 @@ public class RegistrationService extends Service {
     TextSecurePreferences.setLocalNumber(this, number);
     TextSecurePreferences.setPushServerPassword(this, password);
     TextSecurePreferences.setSignalingKey(this, signalingKey);
+    TextSecurePreferences.setSignedPreKeyRegistered(this, true);
   }
 
   private void setState(RegistrationState state) {

@@ -6,21 +6,24 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.ViewPager;
+import android.support.v7.app.ActionBar;
+import android.view.MenuItem;
 
-import com.actionbarsherlock.app.ActionBar;
-import com.actionbarsherlock.view.MenuItem;
-
-import org.whispersystems.textsecure.crypto.MasterSecret;
+import org.thoughtcrime.securesms.crypto.MasterSecret;
+import org.thoughtcrime.securesms.util.DynamicTheme;
 
 
-public class ImportExportActivity extends PassphraseRequiredSherlockFragmentActivity {
+public class ImportExportActivity extends PassphraseRequiredActionBarActivity {
 
   private TabPagerAdapter tabPagerAdapter;
   private ViewPager viewPager;
   private MasterSecret masterSecret;
 
+  private DynamicTheme dynamicTheme = new DynamicTheme();
+
   @Override
   public void onCreate(Bundle savedInstanceState) {
+    dynamicTheme.onCreate(this);
     super.onCreate(savedInstanceState);
     setContentView(R.layout.import_export_activity);
     getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -28,6 +31,12 @@ public class ImportExportActivity extends PassphraseRequiredSherlockFragmentActi
     initializeResources();
     initializeViewPager();
     initializeTabs();
+  }
+
+  @Override
+  public void onResume() {
+      dynamicTheme.onResume(this);
+      super.onResume();
   }
 
   @Override

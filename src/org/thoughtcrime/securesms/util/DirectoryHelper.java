@@ -5,26 +5,20 @@ import android.util.Log;
 import android.widget.Toast;
 
 import org.thoughtcrime.securesms.R;
-import org.thoughtcrime.securesms.push.PushServiceSocketFactory;
-import org.thoughtcrime.securesms.recipients.Recipient;
+import org.thoughtcrime.securesms.database.NotInDirectoryException;
+import org.thoughtcrime.securesms.database.TextSecureDirectory;
+import org.thoughtcrime.securesms.push.TextSecureCommunicationFactory;
 import org.thoughtcrime.securesms.recipients.Recipients;
-import org.whispersystems.textsecure.directory.Directory;
-import org.whispersystems.textsecure.directory.NotInDirectoryException;
-import org.whispersystems.textsecure.push.ContactTokenDetails;
-import org.whispersystems.textsecure.push.PushServiceSocket;
-import org.whispersystems.textsecure.util.DirectoryUtil;
-import org.whispersystems.textsecure.util.InvalidNumberException;
+import org.whispersystems.textsecure.api.TextSecureAccountManager;
+import org.whispersystems.textsecure.api.push.ContactTokenDetails;
+import org.whispersystems.textsecure.api.util.InvalidNumberException;
 
+import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 public class DirectoryHelper {
   private static final String TAG = DirectoryHelper.class.getSimpleName();
-
-  public static void refreshDirectoryWithProgressDialog(final Context context) {
-    refreshDirectoryWithProgressDialog(context, null);
-  }
 
   public static void refreshDirectoryWithProgressDialog(final Context context, final DirectoryUpdateFinishedListener listener) {
     if (!TextSecurePreferences.isPushRegistered(context)) {
@@ -40,7 +34,11 @@ public class DirectoryHelper {
     {
       @Override
       protected Void doInBackground(Void... voids) {
-        DirectoryHelper.refreshDirectory(context.getApplicationContext());
+        try {
+          DirectoryHelper.refreshDirectory(context.getApplicationContext());
+        } catch (IOException e) {
+          Log.w(TAG, e);
+        }
         return null;
       }
 
@@ -53,25 +51,27 @@ public class DirectoryHelper {
 
   }
 
-  public static void refreshDirectory(final Context context) {
-    refreshDirectory(context, PushServiceSocketFactory.create(context));
+  public static void refreshDirectory(final Context context) throws IOException {
+    refreshDirectory(context, TextSecureCommunicationFactory.createManager(context));
   }
 
-  public static void refreshDirectory(final Context context, final PushServiceSocket socket) {
-    refreshDirectory(context, socket, TextSecurePreferences.getLocalNumber(context));
+  public static void refreshDirectory(final Context context, final TextSecureAccountManager accountManager)
+      throws IOException
+  {
+    refreshDirectory(context, accountManager, TextSecurePreferences.getLocalNumber(context));
   }
 
-  public static void refreshDirectory(final Context context, final PushServiceSocket socket, final String localNumber) {
-    Directory                 directory              = Directory.getInstance(context);
+  public static void refreshDirectory(final Context context, final TextSecureAccountManager accountManager, final String localNumber)
+      throws IOException
+  {
+    TextSecureDirectory       directory              = TextSecureDirectory.getInstance(context);
     Set<String>               eligibleContactNumbers = directory.getPushEligibleContactNumbers(localNumber);
-    Map<String, String>       tokenMap               = DirectoryUtil.getDirectoryServerTokenMap(eligibleContactNumbers);
-    List<ContactTokenDetails> activeTokens           = socket.retrieveDirectory(tokenMap.keySet());
-
+    List<ContactTokenDetails> activeTokens           = accountManager.getContacts(eligibleContactNumbers);
 
     if (activeTokens != null) {
       for (ContactTokenDetails activeToken : activeTokens) {
-        eligibleContactNumbers.remove(tokenMap.get(activeToken.getToken()));
-        activeToken.setNumber(tokenMap.get(activeToken.getToken()));
+        eligibleContactNumbers.remove(activeToken.getNumber());
+        activeToken.setNumber(activeToken.getNumber());
       }
 
       directory.setNumbers(activeTokens, eligibleContactNumbers);
@@ -104,11 +104,32 @@ public class DirectoryHelper {
 
       final String e164number = Util.canonicalizeNumber(context, number);
 
-      return Directory.getInstance(context).isActiveNumber(e164number);
+      return TextSecureDirectory.getInstance(context).isActiveNumber(e164number);
     } catch (InvalidNumberException e) {
       Log.w(TAG, e);
       return false;
     } catch (NotInDirectoryException e) {
+      return false;
+    }
+  }
+
+  public static boolean isSmsFallbackAllowed(Context context, Recipients recipients) {
+    try {
+      if (recipients == null || !recipients.isSingleRecipient() || recipients.isGroupRecipient()) {
+        return false;
+      }
+
+      final String number = recipients.getPrimaryRecipient().getNumber();
+
+      if (number == null) {
+        return false;
+      }
+
+      final String e164number = Util.canonicalizeNumber(context, number);
+
+      return TextSecureDirectory.getInstance(context).isSmsFallbackSupported(e164number);
+    } catch (InvalidNumberException e) {
+      Log.w(TAG, e);
       return false;
     }
   }

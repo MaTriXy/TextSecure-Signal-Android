@@ -19,10 +19,9 @@ package org.thoughtcrime.securesms;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
-
-import com.actionbarsherlock.view.Menu;
-import com.actionbarsherlock.view.MenuInflater;
-import com.actionbarsherlock.view.MenuItem;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 
 import org.thoughtcrime.securesms.contacts.ContactAccessor;
 import org.thoughtcrime.securesms.database.DatabaseFactory;
@@ -36,7 +35,7 @@ import org.thoughtcrime.securesms.util.DynamicLanguage;
 import org.thoughtcrime.securesms.util.DynamicTheme;
 import org.thoughtcrime.securesms.util.NumberUtil;
 import org.thoughtcrime.securesms.util.TextSecurePreferences;
-import org.whispersystems.textsecure.crypto.MasterSecret;
+import org.thoughtcrime.securesms.crypto.MasterSecret;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -50,7 +49,7 @@ import static org.thoughtcrime.securesms.contacts.ContactAccessor.ContactData;
  * @author Moxie Marlinspike
  *
  */
-public class NewConversationActivity extends PassphraseRequiredSherlockFragmentActivity {
+public class NewConversationActivity extends PassphraseRequiredActionBarActivity {
   private final static String TAG                 = "ContactSelectActivity";
   public  final static String MASTER_SECRET_EXTRA = "master_secret";
 
@@ -83,7 +82,7 @@ public class NewConversationActivity extends PassphraseRequiredSherlockFragmentA
 
   @Override
   public boolean onPrepareOptionsMenu(Menu menu) {
-    MenuInflater inflater = this.getSupportMenuInflater();
+    MenuInflater inflater = this.getMenuInflater();
     menu.clear();
 
     if (TextSecurePreferences.isPushRegistered(this)) inflater.inflate(R.menu.push_directory, menu);
@@ -153,7 +152,7 @@ public class NewConversationActivity extends PassphraseRequiredSherlockFragmentA
   private void openNewConversation(Recipients recipients) {
     if (recipients != null) {
       Intent intent = new Intent(this, ConversationActivity.class);
-      intent.putExtra(ConversationActivity.RECIPIENTS_EXTRA, recipients.toIdString());
+      intent.putExtra(ConversationActivity.RECIPIENTS_EXTRA, recipients.getIds());
       intent.putExtra(ConversationActivity.MASTER_SECRET_EXTRA, masterSecret);
       intent.putExtra(ConversationActivity.DRAFT_TEXT_EXTRA, getIntent().getStringExtra(ConversationActivity.DRAFT_TEXT_EXTRA));
       intent.putExtra(ConversationActivity.DRAFT_AUDIO_EXTRA, getIntent().getParcelableExtra(ConversationActivity.DRAFT_AUDIO_EXTRA));

@@ -19,33 +19,19 @@ package org.thoughtcrime.securesms.recipients;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.net.Uri;
-import android.os.Parcel;
-import android.os.Parcelable;
 import android.util.Log;
 
 import org.thoughtcrime.securesms.contacts.ContactPhotoFactory;
 import org.thoughtcrime.securesms.recipients.RecipientProvider.RecipientDetails;
-import org.thoughtcrime.securesms.util.BitmapUtil;
 import org.thoughtcrime.securesms.util.GroupUtil;
-import org.whispersystems.textsecure.storage.CanonicalRecipient;
-import org.whispersystems.textsecure.util.FutureTaskListener;
-import org.whispersystems.textsecure.util.ListenableFutureTask;
+import org.thoughtcrime.securesms.util.FutureTaskListener;
+import org.thoughtcrime.securesms.util.ListenableFutureTask;
 
 import java.util.HashSet;
 
-public class Recipient implements Parcelable, CanonicalRecipient {
+public class Recipient {
 
   private final static String TAG = Recipient.class.getSimpleName();
-
-  public static final Parcelable.Creator<Recipient> CREATOR = new Parcelable.Creator<Recipient>() {
-    public Recipient createFromParcel(Parcel in) {
-      return new Recipient(in);
-    }
-
-    public Recipient[] newArray(int size) {
-      return new Recipient[size];
-    }
-  };
 
   private final HashSet<RecipientModifiedListener> listeners = new HashSet<RecipientModifiedListener>();
 
@@ -55,19 +41,19 @@ public class Recipient implements Parcelable, CanonicalRecipient {
   private String name;
 
   private Bitmap contactPhoto;
-  private Bitmap circleCroppedContactPhoto;
+  private Bitmap generatedAvatar;
 
   private Uri    contactUri;
 
-  Recipient(String number, Bitmap contactPhoto, Bitmap circleCroppedContactPhoto,
+  Recipient(String number, Bitmap contactPhoto,
             long recipientId, ListenableFutureTask<RecipientDetails> future)
   {
     this.number                     = number;
-    this.circleCroppedContactPhoto  = circleCroppedContactPhoto;
     this.contactPhoto               = contactPhoto;
     this.recipientId                = recipientId;
+    this.generatedAvatar            = null;
 
-    future.setListener(new FutureTaskListener<RecipientDetails>() {
+    future.addListener(new FutureTaskListener<RecipientDetails>() {
       @Override
       public void onSuccess(RecipientDetails result) {
         if (result != null) {
@@ -78,8 +64,7 @@ public class Recipient implements Parcelable, CanonicalRecipient {
             Recipient.this.number                    = result.number;
             Recipient.this.contactUri                = result.contactUri;
             Recipient.this.contactPhoto              = result.avatar;
-            Recipient.this.circleCroppedContactPhoto = result.croppedAvatar;
-            
+
             localListeners                           = (HashSet<RecipientModifiedListener>) listeners.clone();
             listeners.clear();
           }
@@ -96,23 +81,12 @@ public class Recipient implements Parcelable, CanonicalRecipient {
     });
   }
 
-  Recipient(String name, String number, long recipientId, Uri contactUri, Bitmap contactPhoto,
-            Bitmap circleCroppedContactPhoto)
-  {
+  Recipient(String name, String number, long recipientId, Uri contactUri, Bitmap contactPhoto) {
     this.number                     = number;
     this.recipientId                = recipientId;
     this.contactUri                 = contactUri;
     this.name                       = name;
     this.contactPhoto               = contactPhoto;
-    this.circleCroppedContactPhoto  = circleCroppedContactPhoto;
-  }
-
-  public Recipient(Parcel in) {
-    this.number       = in.readString();
-    this.name         = in.readString();
-    this.recipientId  = in.readLong();
-    this.contactUri   = in.readParcelable(null);
-    this.contactPhoto = in.readParcelable(null);
   }
 
   public synchronized Uri getContactUri() {
@@ -135,10 +109,6 @@ public class Recipient implements Parcelable, CanonicalRecipient {
 
   public String getNumber() {
     return number;
-  }
-
-  public int describeContents() {
-    return 0;
   }
 
   public long getRecipientId() {
@@ -169,14 +139,6 @@ public class Recipient implements Parcelable, CanonicalRecipient {
     }
   }
 
-  public synchronized void writeToParcel(Parcel dest, int flags) {
-    dest.writeString(number);
-    dest.writeString(name);
-    dest.writeLong(recipientId);
-    dest.writeParcelable(contactUri, 0);
-    dest.writeParcelable(contactPhoto, 0);
-  }
-
   public synchronized String toShortString() {
     return (name == null ? number : name);
   }
@@ -185,14 +147,16 @@ public class Recipient implements Parcelable, CanonicalRecipient {
     return contactPhoto;
   }
 
-  public synchronized Bitmap getCircleCroppedContactPhoto() {
-    return this.circleCroppedContactPhoto;
+  public synchronized Bitmap getGeneratedAvatar(Context context) {
+    if (this.generatedAvatar == null)
+      this.generatedAvatar = AvatarGenerator.generateFor(context, this);
+
+    return this.generatedAvatar;
   }
 
   public static Recipient getUnknownRecipient(Context context) {
     return new Recipient("Unknown", "Unknown", -1, null,
-                         ContactPhotoFactory.getDefaultContactPhoto(context),
-                         ContactPhotoFactory.getDefaultContactPhotoCropped(context));
+                         ContactPhotoFactory.getDefaultContactPhoto(context));
   }
 
   @Override

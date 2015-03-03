@@ -25,7 +25,7 @@ import android.view.ViewGroup;
 import android.widget.AbsListView;
 import android.support.v4.widget.CursorAdapter;
 
-import org.whispersystems.textsecure.crypto.MasterSecret;
+import org.thoughtcrime.securesms.crypto.MasterSecret;
 import org.thoughtcrime.securesms.database.DatabaseFactory;
 import org.thoughtcrime.securesms.database.MmsSmsColumns;
 import org.thoughtcrime.securesms.database.MmsSmsDatabase;
@@ -35,7 +35,11 @@ import org.thoughtcrime.securesms.util.LRUCache;
 
 import java.lang.ref.SoftReference;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
+
+import org.thoughtcrime.securesms.ConversationFragment.SelectionClickListener;
 
 /**
  * A cursor adapter for a conversation thread.  Ultimately
@@ -55,20 +59,22 @@ public class ConversationAdapter extends CursorAdapter implements AbsListView.Re
   public static final int MESSAGE_TYPE_INCOMING = 1;
   public static final int MESSAGE_TYPE_GROUP_ACTION = 2;
 
-  private final Handler failedIconClickHandler;
-  private final Context context;
-  private final MasterSecret masterSecret;
-  private final boolean groupThread;
-  private final boolean pushDestination;
-  private final LayoutInflater inflater;
+  private final Set<MessageRecord> batchSelected = Collections.synchronizedSet(new HashSet<MessageRecord>());
 
-  public ConversationAdapter(Context context, MasterSecret masterSecret,
-                             Handler failedIconClickHandler, boolean groupThread, boolean pushDestination)
+  private final SelectionClickListener selectionClickListener;
+  private final Context                context;
+  private final MasterSecret           masterSecret;
+  private final boolean                groupThread;
+  private final boolean                pushDestination;
+  private final LayoutInflater         inflater;
+
+  public ConversationAdapter(Context context, MasterSecret masterSecret, SelectionClickListener selectionClickListener,
+                             boolean groupThread, boolean pushDestination)
   {
-    super(context, null, true);
+    super(context, null, 0);
     this.context                = context;
     this.masterSecret           = masterSecret;
-    this.failedIconClickHandler = failedIconClickHandler;
+    this.selectionClickListener = selectionClickListener;
     this.groupThread            = groupThread;
     this.pushDestination        = pushDestination;
     this.inflater               = LayoutInflater.from(context);
@@ -81,7 +87,14 @@ public class ConversationAdapter extends CursorAdapter implements AbsListView.Re
     String type                 = cursor.getString(cursor.getColumnIndexOrThrow(MmsSmsDatabase.TRANSPORT));
     MessageRecord messageRecord = getMessageRecord(id, cursor, type);
 
-    item.set(masterSecret, messageRecord, failedIconClickHandler, groupThread, pushDestination);
+    item.set(masterSecret, messageRecord, batchSelected, selectionClickListener,
+             groupThread, pushDestination);
+  }
+
+  @Override
+  public void changeCursor(Cursor cursor) {
+    messageRecordCache.clear();
+    super.changeCursor(cursor);
   }
 
   @Override
@@ -148,14 +161,20 @@ public class ConversationAdapter extends CursorAdapter implements AbsListView.Re
     return messageRecord;
   }
 
-  @Override
-  protected void onContentChanged() {
-    super.onContentChanged();
-    messageRecordCache.clear();
-  }
-
   public void close() {
     this.getCursor().close();
+  }
+
+  public void toggleBatchSelected(MessageRecord messageRecord) {
+    if (batchSelected.contains(messageRecord)) {
+      batchSelected.remove(messageRecord);
+    } else {
+      batchSelected.add(messageRecord);
+    }
+  }
+
+  public Set<MessageRecord> getBatchSelected() {
+    return batchSelected;
   }
 
   @Override

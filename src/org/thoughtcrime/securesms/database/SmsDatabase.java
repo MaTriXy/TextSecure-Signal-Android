@@ -23,11 +23,16 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteStatement;
 import android.telephony.PhoneNumberUtils;
+import android.text.TextUtils;
 import android.util.Log;
 import android.util.Pair;
 
+import org.thoughtcrime.securesms.ApplicationContext;
+import org.thoughtcrime.securesms.database.documents.IdentityKeyMismatch;
+import org.thoughtcrime.securesms.database.documents.IdentityKeyMismatchList;
 import org.thoughtcrime.securesms.database.model.DisplayRecord;
 import org.thoughtcrime.securesms.database.model.SmsMessageRecord;
+import org.thoughtcrime.securesms.jobs.TrimThreadJob;
 import org.thoughtcrime.securesms.recipients.Recipient;
 import org.thoughtcrime.securesms.recipients.RecipientFactory;
 import org.thoughtcrime.securesms.recipients.RecipientFormattingException;
@@ -36,12 +41,16 @@ import org.thoughtcrime.securesms.sms.IncomingGroupMessage;
 import org.thoughtcrime.securesms.sms.IncomingKeyExchangeMessage;
 import org.thoughtcrime.securesms.sms.IncomingTextMessage;
 import org.thoughtcrime.securesms.sms.OutgoingTextMessage;
-import org.thoughtcrime.securesms.util.Trimmer;
-import org.whispersystems.textsecure.util.Util;
+import org.thoughtcrime.securesms.util.JsonUtils;
+import org.whispersystems.jobqueue.JobManager;
+import org.whispersystems.textsecure.api.util.InvalidNumberException;
 
+import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+
+import static org.thoughtcrime.securesms.util.Util.canonicalizeNumber;
 
 /**
  * Database for storage of SMS messages.
@@ -49,7 +58,9 @@ import java.util.Set;
  * @author Moxie Marlinspike
  */
 
-public class SmsDatabase extends Database implements MmsSmsColumns {
+public class SmsDatabase extends MessagingDatabase {
+
+  private static final String TAG = SmsDatabase.class.getSimpleName();
 
   public  static final String TABLE_NAME         = "sms";
   public  static final String PERSON             = "person";
@@ -66,13 +77,15 @@ public class SmsDatabase extends Database implements MmsSmsColumns {
     THREAD_ID + " INTEGER, " + ADDRESS + " TEXT, " + ADDRESS_DEVICE_ID + " INTEGER DEFAULT 1, " + PERSON + " INTEGER, " +
     DATE_RECEIVED  + " INTEGER, " + DATE_SENT + " INTEGER, " + PROTOCOL + " INTEGER, " + READ + " INTEGER DEFAULT 0, " +
     STATUS + " INTEGER DEFAULT -1," + TYPE + " INTEGER, " + REPLY_PATH_PRESENT + " INTEGER, " +
-    SUBJECT + " TEXT, " + BODY + " TEXT, " + SERVICE_CENTER + " TEXT);";
+    RECEIPT_COUNT + " INTEGER DEFAULT 0," + SUBJECT + " TEXT, " + BODY + " TEXT, " +
+    MISMATCHED_IDENTITIES + " TEXT DEFAULT NULL, " + SERVICE_CENTER + " TEXT);";
 
   public static final String[] CREATE_INDEXS = {
     "CREATE INDEX IF NOT EXISTS sms_thread_id_index ON " + TABLE_NAME + " (" + THREAD_ID + ");",
     "CREATE INDEX IF NOT EXISTS sms_read_index ON " + TABLE_NAME + " (" + READ + ");",
     "CREATE INDEX IF NOT EXISTS sms_read_and_thread_id_index ON " + TABLE_NAME + "(" + READ + "," + THREAD_ID + ");",
-    "CREATE INDEX IF NOT EXISTS sms_type_index ON " + TABLE_NAME + " (" + TYPE + ");"
+    "CREATE INDEX IF NOT EXISTS sms_type_index ON " + TABLE_NAME + " (" + TYPE + ");",
+    "CREATE INDEX IF NOT EXISTS sms_date_sent_index ON " + TABLE_NAME + " (" + DATE_SENT + ");"
   };
 
   private static final String[] MESSAGE_PROJECTION = new String[] {
@@ -80,11 +93,19 @@ public class SmsDatabase extends Database implements MmsSmsColumns {
       DATE_RECEIVED + " AS " + NORMALIZED_DATE_RECEIVED,
       DATE_SENT + " AS " + NORMALIZED_DATE_SENT,
       PROTOCOL, READ, STATUS, TYPE,
-      REPLY_PATH_PRESENT, SUBJECT, BODY, SERVICE_CENTER
+      REPLY_PATH_PRESENT, SUBJECT, BODY, SERVICE_CENTER, RECEIPT_COUNT,
+      MISMATCHED_IDENTITIES
   };
+
+  private final JobManager jobManager;
 
   public SmsDatabase(Context context, SQLiteOpenHelper databaseHelper) {
     super(context, databaseHelper);
+    this.jobManager = ApplicationContext.getInstance(context).getJobManager();
+  }
+
+  protected String getTableName() {
+    return TABLE_NAME;
   }
 
   private void updateTypeBitmask(long id, long maskOff, long maskOn) {
@@ -152,6 +173,14 @@ public class SmsDatabase extends Database implements MmsSmsColumns {
     }
 
     return 0;
+  }
+
+  public void markAsEndSession(long id) {
+    updateTypeBitmask(id, Types.KEY_EXCHANGE_MASK, Types.END_SESSION_BIT);
+  }
+
+  public void markAsPreKeyBundle(long id) {
+    updateTypeBitmask(id, Types.KEY_EXCHANGE_MASK, Types.KEY_EXCHANGE_BIT | Types.KEY_EXCHANGE_BUNDLE_BIT);
   }
 
   public void markAsStaleKeyExchange(long id) {
@@ -240,6 +269,40 @@ public class SmsDatabase extends Database implements MmsSmsColumns {
     updateTypeBitmask(id, Types.BASE_TYPE_MASK, Types.BASE_SENT_FAILED_TYPE);
   }
 
+  public void incrementDeliveryReceiptCount(String address, long timestamp) {
+    SQLiteDatabase database = databaseHelper.getWritableDatabase();
+    Cursor         cursor   = null;
+
+    try {
+      cursor = database.query(TABLE_NAME, new String[] {ID, THREAD_ID, ADDRESS, TYPE},
+                              DATE_SENT + " = ?", new String[] {String.valueOf(timestamp)},
+                              null, null, null, null);
+
+      while (cursor.moveToNext()) {
+        if (Types.isOutgoingMessageType(cursor.getLong(cursor.getColumnIndexOrThrow(TYPE)))) {
+          try {
+            String theirAddress = canonicalizeNumber(context, address);
+            String ourAddress   = canonicalizeNumber(context, cursor.getString(cursor.getColumnIndexOrThrow(ADDRESS)));
+
+            if (ourAddress.equals(theirAddress)) {
+              database.execSQL("UPDATE " + TABLE_NAME +
+                               " SET " + RECEIPT_COUNT + " = " + RECEIPT_COUNT + " + 1 WHERE " +
+                               ID + " = ?",
+                               new String[] {String.valueOf(cursor.getLong(cursor.getColumnIndexOrThrow(ID)))});
+
+              notifyConversationListeners(cursor.getLong(cursor.getColumnIndexOrThrow(THREAD_ID)));
+            }
+          } catch (InvalidNumberException e) {
+            Log.w("SmsDatabase", e);
+          }
+        }
+      }
+    } finally {
+      if (cursor != null)
+        cursor.close();
+    }
+  }
+
   public void setMessagesRead(long threadId) {
     SQLiteDatabase database     = databaseHelper.getWritableDatabase();
     ContentValues contentValues = new ContentValues();
@@ -261,15 +324,42 @@ public class SmsDatabase extends Database implements MmsSmsColumns {
   protected void updateMessageBodyAndType(long messageId, String body, long maskOff, long maskOn) {
     SQLiteDatabase db = databaseHelper.getWritableDatabase();
     db.execSQL("UPDATE " + TABLE_NAME + " SET " + BODY + " = ?, " +
-               TYPE + " = (" + TYPE + " & " + (Types.TOTAL_MASK - maskOff) + " | " + maskOn + ") " +
-               "WHERE " + ID + " = ?",
-               new String[] {body, messageId+""});
+                   TYPE + " = (" + TYPE + " & " + (Types.TOTAL_MASK - maskOff) + " | " + maskOn + ") " +
+                   "WHERE " + ID + " = ?",
+               new String[] {body, messageId + ""});
 
     long threadId = getThreadIdForMessage(messageId);
 
     DatabaseFactory.getThreadDatabase(context).update(threadId);
     notifyConversationListeners(threadId);
     notifyConversationListListeners();
+  }
+
+  public Pair<Long, Long> copyMessageInbox(long messageId) {
+    Reader           reader = readerFor(getMessage(messageId));
+    SmsMessageRecord record = reader.getNext();
+
+    ContentValues contentValues = new ContentValues();
+    contentValues.put(TYPE, (record.getType() & ~Types.BASE_TYPE_MASK) | Types.BASE_INBOX_TYPE);
+    contentValues.put(ADDRESS, record.getIndividualRecipient().getNumber());
+    contentValues.put(ADDRESS_DEVICE_ID, record.getRecipientDeviceId());
+    contentValues.put(DATE_RECEIVED, System.currentTimeMillis());
+    contentValues.put(DATE_SENT, record.getDateSent());
+    contentValues.put(PROTOCOL, 31337);
+    contentValues.put(READ, 0);
+    contentValues.put(BODY, record.getBody().getBody());
+    contentValues.put(THREAD_ID, record.getThreadId());
+
+    SQLiteDatabase db           = databaseHelper.getWritableDatabase();
+    long           newMessageId = db.insert(TABLE_NAME, null, contentValues);
+
+    DatabaseFactory.getThreadDatabase(context).update(record.getThreadId());
+    notifyConversationListeners(record.getThreadId());
+
+    jobManager.add(new TrimThreadJob(context, record.getThreadId()));
+    reader.close();
+    
+    return new Pair<>(newMessageId, record.getThreadId());
   }
 
   protected Pair<Long, Long> insertMessageInbox(IncomingTextMessage message, long type) {
@@ -281,10 +371,11 @@ public class SmsDatabase extends Database implements MmsSmsColumns {
       else if (((IncomingKeyExchangeMessage)message).isInvalidVersion()) type |= Types.KEY_EXCHANGE_INVALID_VERSION_BIT;
       else if (((IncomingKeyExchangeMessage)message).isIdentityUpdate()) type |= Types.KEY_EXCHANGE_IDENTITY_UPDATE_BIT;
       else if (((IncomingKeyExchangeMessage)message).isLegacyVersion())  type |= Types.ENCRYPTION_REMOTE_LEGACY_BIT;
+      else if (((IncomingKeyExchangeMessage)message).isDuplicate())      type |= Types.ENCRYPTION_REMOTE_DUPLICATE_BIT;
       else if (((IncomingKeyExchangeMessage)message).isPreKeyBundle())   type |= Types.KEY_EXCHANGE_BUNDLE_BIT;
     } else if (message.isSecureMessage()) {
       type |= Types.SECURE_MESSAGE_BIT;
-      type |= Types.ENCRYPTION_REMOTE_BIT;
+//      type |= Types.ENCRYPTION_REMOTE_BIT;
     } else if (message.isGroup()) {
       type |= Types.SECURE_MESSAGE_BIT;
       if      (((IncomingGroupMessage)message).isUpdate()) type |= Types.GROUP_UPDATE_BIT;
@@ -292,7 +383,7 @@ public class SmsDatabase extends Database implements MmsSmsColumns {
     } else if (message.isEndSession()) {
       type |= Types.SECURE_MESSAGE_BIT;
       type |= Types.END_SESSION_BIT;
-      type |= Types.ENCRYPTION_REMOTE_BIT;
+//      type |= Types.ENCRYPTION_REMOTE_BIT;
     }
 
     if (message.isPush()) type |= Types.PUSH_MESSAGE_BIT;
@@ -335,7 +426,7 @@ public class SmsDatabase extends Database implements MmsSmsColumns {
     values.put(PROTOCOL, message.getProtocol());
     values.put(READ, unread ? 0 : 1);
 
-    if (!Util.isEmpty(message.getPseudoSubject()))
+    if (!TextUtils.isEmpty(message.getPseudoSubject()))
       values.put(SUBJECT, message.getPseudoSubject());
 
     values.put(REPLY_PATH_PRESENT, message.isReplyPathPresent());
@@ -353,45 +444,42 @@ public class SmsDatabase extends Database implements MmsSmsColumns {
 
     DatabaseFactory.getThreadDatabase(context).update(threadId);
     notifyConversationListeners(threadId);
-    Trimmer.trimThread(context, threadId);
+    jobManager.add(new TrimThreadJob(context, threadId));
 
-    return new Pair<Long, Long>(messageId, threadId);
+    return new Pair<>(messageId, threadId);
   }
 
   public Pair<Long, Long> insertMessageInbox(IncomingTextMessage message) {
     return insertMessageInbox(message, Types.BASE_INBOX_TYPE);
   }
 
-  protected List<Long> insertMessageOutbox(long threadId, OutgoingTextMessage message,
-                                           long type, boolean forceSms)
+  protected long insertMessageOutbox(long threadId, OutgoingTextMessage message,
+                                     long type, boolean forceSms)
   {
     if      (message.isKeyExchange())   type |= Types.KEY_EXCHANGE_BIT;
     else if (message.isSecureMessage()) type |= Types.SECURE_MESSAGE_BIT;
     else if (message.isEndSession())    type |= Types.END_SESSION_BIT;
     if      (forceSms)                  type |= Types.MESSAGE_FORCE_SMS_BIT;
 
-    long date             = System.currentTimeMillis();
-    List<Long> messageIds = new LinkedList<Long>();
+    long date = System.currentTimeMillis();
 
-    for (Recipient recipient : message.getRecipients().getRecipientsList()) {
-      ContentValues contentValues = new ContentValues(6);
-      contentValues.put(ADDRESS, PhoneNumberUtils.formatNumber(recipient.getNumber()));
-      contentValues.put(THREAD_ID, threadId);
-      contentValues.put(BODY, message.getMessageBody());
-      contentValues.put(DATE_RECEIVED, date);
-      contentValues.put(DATE_SENT, date);
-      contentValues.put(READ, 1);
-      contentValues.put(TYPE, type);
+    ContentValues contentValues = new ContentValues(6);
+    contentValues.put(ADDRESS, PhoneNumberUtils.formatNumber(message.getRecipients().getPrimaryRecipient().getNumber()));
+    contentValues.put(THREAD_ID, threadId);
+    contentValues.put(BODY, message.getMessageBody());
+    contentValues.put(DATE_RECEIVED, date);
+    contentValues.put(DATE_SENT, date);
+    contentValues.put(READ, 1);
+    contentValues.put(TYPE, type);
 
-      SQLiteDatabase db = databaseHelper.getWritableDatabase();
-      messageIds.add(db.insert(TABLE_NAME, ADDRESS, contentValues));
+    SQLiteDatabase db        = databaseHelper.getWritableDatabase();
+    long           messageId = db.insert(TABLE_NAME, ADDRESS, contentValues);
 
-      DatabaseFactory.getThreadDatabase(context).update(threadId);
-      notifyConversationListeners(threadId);
-      Trimmer.trimThread(context, threadId);
-    }
+    DatabaseFactory.getThreadDatabase(context).update(threadId);
+    notifyConversationListeners(threadId);
+    jobManager.add(new TrimThreadJob(context, threadId));
 
-    return messageIds;
+    return messageId;
   }
 
   Cursor getMessages(int skip, int limit) {
@@ -420,9 +508,11 @@ public class SmsDatabase extends Database implements MmsSmsColumns {
   }
 
   public Cursor getMessage(long messageId) {
-    SQLiteDatabase db = databaseHelper.getReadableDatabase();
-    return db.query(TABLE_NAME, MESSAGE_PROJECTION, ID_WHERE, new String[] {messageId+""},
-                    null, null, null);
+    SQLiteDatabase db     = databaseHelper.getReadableDatabase();
+    Cursor         cursor = db.query(TABLE_NAME, MESSAGE_PROJECTION, ID_WHERE, new String[]{messageId + ""},
+                                     null, null, null);
+    setNotifyConverationListeners(cursor, getThreadIdForMessage(messageId));
+    return cursor;
   }
 
   public void deleteMessage(long messageId) {
@@ -449,7 +539,7 @@ public class SmsDatabase extends Database implements MmsSmsColumns {
 
     where += (" ELSE " + DATE_RECEIVED + " < " + date + " END)");
 
-    db.delete(TABLE_NAME, where, new String[] {threadId+""});
+    db.delete(TABLE_NAME, where, new String[] {threadId + ""});
   }
 
   /*package*/ void deleteThreads(Set<Long> threadIds) {
@@ -538,14 +628,18 @@ public class SmsDatabase extends Database implements MmsSmsColumns {
       long dateSent           = cursor.getLong(cursor.getColumnIndexOrThrow(SmsDatabase.NORMALIZED_DATE_SENT));
       long threadId           = cursor.getLong(cursor.getColumnIndexOrThrow(SmsDatabase.THREAD_ID));
       int status              = cursor.getInt(cursor.getColumnIndexOrThrow(SmsDatabase.STATUS));
-      Recipients recipients   = getRecipientsFor(address);
-      DisplayRecord.Body body = getBody(cursor);
+      int receiptCount        = cursor.getInt(cursor.getColumnIndexOrThrow(SmsDatabase.RECEIPT_COUNT));
+      String mismatchDocument = cursor.getString(cursor.getColumnIndexOrThrow(SmsDatabase.MISMATCHED_IDENTITIES));
 
-      return  new SmsMessageRecord(context, messageId, body, recipients,
-                                   recipients.getPrimaryRecipient(),
-                                   addressDeviceId,
-                                   dateSent, dateReceived, type,
-                                   threadId, status);
+      List<IdentityKeyMismatch> mismatches = getMismatches(mismatchDocument);
+      Recipients                recipients = getRecipientsFor(address);
+      DisplayRecord.Body        body       = getBody(cursor);
+
+      return new SmsMessageRecord(context, messageId, body, recipients,
+                                  recipients.getPrimaryRecipient(),
+                                  addressDeviceId,
+                                  dateSent, dateReceived, receiptCount, type,
+                                  threadId, status, mismatches);
     }
 
     private Recipients getRecipientsFor(String address) {
@@ -561,6 +655,18 @@ public class SmsDatabase extends Database implements MmsSmsColumns {
         Log.w("EncryptingSmsDatabase", e);
         return new Recipients(Recipient.getUnknownRecipient(context));
       }
+    }
+
+    private List<IdentityKeyMismatch> getMismatches(String document) {
+      try {
+        if (!TextUtils.isEmpty(document)) {
+          return JsonUtils.fromJson(document, IdentityKeyMismatchList.class).getList();
+        }
+      } catch (IOException e) {
+        Log.w(TAG, e);
+      }
+
+      return new LinkedList<>();
     }
 
     protected DisplayRecord.Body getBody(Cursor cursor) {

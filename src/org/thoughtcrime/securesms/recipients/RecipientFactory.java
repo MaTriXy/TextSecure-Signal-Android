@@ -17,13 +17,13 @@
 package org.thoughtcrime.securesms.recipients;
 
 import android.content.Context;
+import android.text.TextUtils;
 import android.util.Log;
 
 import org.thoughtcrime.securesms.contacts.ContactPhotoFactory;
 import org.thoughtcrime.securesms.database.CanonicalAddressDatabase;
-import org.whispersystems.textsecure.push.IncomingPushMessage;
-import org.whispersystems.textsecure.util.Util;
 
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.StringTokenizer;
@@ -33,19 +33,32 @@ public class RecipientFactory {
   private static final RecipientProvider provider = new RecipientProvider();
 
   public static Recipients getRecipientsForIds(Context context, String recipientIds, boolean asynchronous) {
-    if (Util.isEmpty(recipientIds))
+    if (TextUtils.isEmpty(recipientIds))
       return new Recipients(new LinkedList<Recipient>());
 
-    List<Recipient> results   = new LinkedList<Recipient>();
+    List<Recipient> results   = new LinkedList<>();
     StringTokenizer tokenizer = new StringTokenizer(recipientIds.trim(), " ");
 
     while (tokenizer.hasMoreTokens()) {
       String recipientId  = tokenizer.nextToken();
-      Recipient recipient = getRecipientFromProviderId(context, recipientId, asynchronous);
+      Recipient recipient = getRecipientFromProviderId(context, Long.parseLong(recipientId), asynchronous);
 
       results.add(recipient);
     }
 
+    return new Recipients(results);
+  }
+
+  public static Recipient getRecipientForId(Context context, long recipientId, boolean asynchronous) {
+    return getRecipientFromProviderId(context, recipientId, asynchronous);
+  }
+
+  public static Recipients getRecipientsForIds(Context context, long[] recipientIds, boolean asynchronous) {
+    List<Recipient> results = new LinkedList<>();
+    if (recipientIds == null) return new Recipients(results);
+    for (long recipientId : recipientIds) {
+      results.add(getRecipientFromProviderId(context, recipientId, asynchronous));
+    }
     return new Recipients(results);
   }
 
@@ -73,21 +86,9 @@ public class RecipientFactory {
     return new Recipients(results);
   }
 
-  public static Recipients getRecipientsFromMessage(Context context,
-                                                    IncomingPushMessage message,
-                                                    boolean asynchronous)
-  {
+  private static Recipient getRecipientFromProviderId(Context context, long recipientId, boolean asynchronous) {
     try {
-      return getRecipientsFromString(context, message.getSource(), asynchronous);
-    } catch (RecipientFormattingException e) {
-      Log.w("RecipientFactory", e);
-      return new Recipients(Recipient.getUnknownRecipient(context));
-    }
-  }
-
-  private static Recipient getRecipientFromProviderId(Context context, String recipientId, boolean asynchronous) {
-    try {
-      return provider.getRecipient(context, Long.parseLong(recipientId), asynchronous);
+      return provider.getRecipient(context, recipientId, asynchronous);
     } catch (NumberFormatException e) {
       Log.w("RecipientFactory", e);
       return Recipient.getUnknownRecipient(context);

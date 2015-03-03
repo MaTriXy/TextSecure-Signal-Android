@@ -31,7 +31,7 @@ import android.os.IBinder;
 import android.os.ParcelFileDescriptor;
 import android.util.Log;
 
-import org.whispersystems.textsecure.crypto.MasterSecret;
+import org.thoughtcrime.securesms.crypto.MasterSecret;
 import org.thoughtcrime.securesms.database.DatabaseFactory;
 import org.thoughtcrime.securesms.service.KeyCachingService;
 
@@ -68,7 +68,7 @@ public class PartProvider extends ContentProvider {
   }
 
   private File copyPartToTemporaryFile(MasterSecret masterSecret, long partId) throws IOException {
-    InputStream in        = DatabaseFactory.getEncryptingPartDatabase(getContext(), masterSecret).getPartStream(partId);
+    InputStream in        = DatabaseFactory.getPartDatabase(getContext()).getPartStream(masterSecret, partId);
     File tmpDir           = getContext().getDir("tmp", 0);
     File tmpFile          = File.createTempFile("test", ".jpg", tmpDir);
     FileOutputStream fout = new FileOutputStream(tmpFile);
@@ -144,22 +144,8 @@ public class PartProvider extends ContentProvider {
     IntentFilter filter = new IntentFilter(KeyCachingService.NEW_KEY_EVENT);
     getContext().registerReceiver(receiver, filter, KeyCachingService.KEY_PERMISSION, null);
 
-    Intent bindIntent   = new Intent(getContext(), KeyCachingService.class);
-    getContext().bindService(bindIntent, serviceConnection, Context.BIND_AUTO_CREATE);
+    initializeWithMasterSecret(KeyCachingService.getMasterSecret(getContext()));
   }
-
-  private ServiceConnection serviceConnection = new ServiceConnection() {
-      public void onServiceConnected(ComponentName className, IBinder service) {
-        KeyCachingService keyCachingService  = ((KeyCachingService.KeyCachingBinder)service).getService();
-        MasterSecret masterSecret            = keyCachingService.getMasterSecret();
-
-        initializeWithMasterSecret(masterSecret);
-
-        PartProvider.this.getContext().unbindService(this);
-      }
-
-      public void onServiceDisconnected(ComponentName name) {}
-    };
 
   private class NewKeyReceiver extends BroadcastReceiver {
     @Override

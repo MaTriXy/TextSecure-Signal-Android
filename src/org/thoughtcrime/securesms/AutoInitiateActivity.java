@@ -16,7 +16,6 @@
  */
 package org.thoughtcrime.securesms;
 
-import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -26,14 +25,15 @@ import android.view.View;
 import android.widget.Button;
 
 import org.thoughtcrime.securesms.crypto.KeyExchangeInitiator;
+import org.thoughtcrime.securesms.crypto.MasterSecret;
+import org.thoughtcrime.securesms.crypto.storage.TextSecureSessionStore;
 import org.thoughtcrime.securesms.protocol.Tag;
 import org.thoughtcrime.securesms.recipients.Recipient;
+import org.thoughtcrime.securesms.recipients.RecipientFactory;
 import org.thoughtcrime.securesms.util.MemoryCleaner;
 import org.thoughtcrime.securesms.util.TextSecurePreferences;
-import org.whispersystems.textsecure.crypto.MasterSecret;
-import org.whispersystems.textsecure.storage.RecipientDevice;
-import org.whispersystems.textsecure.storage.Session;
-import org.whispersystems.textsecure.storage.SessionRecordV2;
+import org.whispersystems.libaxolotl.state.SessionStore;
+import org.whispersystems.textsecure.api.push.TextSecureAddress;
 
 /**
  * Activity which prompts the user to initiate a secure
@@ -43,7 +43,7 @@ import org.whispersystems.textsecure.storage.SessionRecordV2;
  * @author Moxie Marlinspike
  *
  */
-public class AutoInitiateActivity extends Activity {
+public class AutoInitiateActivity extends BaseActivity {
 
   private long threadId;
   private Recipient recipient;
@@ -65,8 +65,8 @@ public class AutoInitiateActivity extends Activity {
 
   private void initializeResources() {
     this.threadId     = this.getIntent().getLongExtra("threadId", -1);
-    this.recipient    = (Recipient)this.getIntent().getParcelableExtra("recipient");
-    this.masterSecret = (MasterSecret)this.getIntent().getParcelableExtra("masterSecret");
+    this.recipient    = RecipientFactory.getRecipientForId(this, this.getIntent().getLongExtra("recipient", -1), true);
+    this.masterSecret = this.getIntent().getParcelableExtra("masterSecret");
 
     ((Button)findViewById(R.id.initiate_button)).setOnClickListener(new OkListener());
     ((Button)findViewById(R.id.cancel_button)).setOnClickListener(new CancelListener());
@@ -117,6 +117,7 @@ public class AutoInitiateActivity extends Activity {
                                              MasterSecret masterSecret,
                                              Recipient recipient)
   {
-    return !Session.hasSession(context, masterSecret, recipient);
+    SessionStore sessionStore = new TextSecureSessionStore(context, masterSecret);
+    return sessionStore.containsSession(recipient.getRecipientId(), TextSecureAddress.DEFAULT_DEVICE_ID);
   }
 }

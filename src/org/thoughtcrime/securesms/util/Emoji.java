@@ -19,14 +19,12 @@ import android.util.Pair;
 import android.util.SparseArray;
 import android.view.View;
 
-import com.google.thoughtcrimegson.Gson;
-import com.google.thoughtcrimegson.reflect.TypeToken;
+import com.fasterxml.jackson.databind.type.TypeFactory;
 
 import org.thoughtcrime.securesms.R;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.lang.reflect.Type;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.concurrent.ExecutorService;
@@ -34,6 +32,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class Emoji {
+
+  private static final String TAG = Emoji.class.getSimpleName();
 
   private static ExecutorService executor = Util.newSingleThreadedLifoExecutor();
 
@@ -294,7 +294,7 @@ public class Emoji {
   private static class EmojiLRU {
     private static       SharedPreferences     prefs                = null;
     private static       LinkedHashSet<String> recentlyUsed         = null;
-    private static final String                EMOJI_LRU_PREFERENCE = "pref_popular_emoji";
+    private static final String                EMOJI_LRU_PREFERENCE = "pref_recent_emoji";
     private static final int                   EMOJI_LRU_SIZE       = 50;
 
     private static void initializeCache(Context context) {
@@ -303,10 +303,16 @@ public class Emoji {
       }
 
       String serialized = prefs.getString(EMOJI_LRU_PREFERENCE, "[]");
-      Type type = new TypeToken<LinkedHashSet<String>>() {
-      }.getType();
 
-      recentlyUsed = new Gson().fromJson(serialized, type);
+      try {
+        recentlyUsed = JsonUtils.getMapper().readValue(serialized, TypeFactory.defaultInstance()
+                                                                              .constructCollectionType(LinkedHashSet.class, String.class));
+      } catch (IOException e) {
+        Log.w(TAG, e);
+        recentlyUsed = new LinkedHashSet<>();
+      }
+
+      recentlyUsed = new LinkedHashSet<>();
     }
 
     public static String[] getRecentlyUsed(Context context) {
@@ -333,14 +339,20 @@ public class Emoji {
         iterator.remove();
       }
 
+      final LinkedHashSet<String> latestRecentlyUsed = new LinkedHashSet<String>(recentlyUsed);
       new AsyncTask<Void, Void, Void>() {
 
         @Override
         protected Void doInBackground(Void... params) {
-          String serialized = new Gson().toJson(recentlyUsed);
-          prefs.edit()
-              .putString(EMOJI_LRU_PREFERENCE, serialized)
-              .apply();
+          try {
+            String serialized = JsonUtils.toJson(latestRecentlyUsed);
+            prefs.edit()
+                 .putString(EMOJI_LRU_PREFERENCE, serialized)
+                 .apply();
+          } catch (IOException e) {
+            Log.w(TAG, e);
+          }
+
           return null;
         }
       }.execute();
@@ -352,15 +364,12 @@ public class Emoji {
     private final        int    index;
     private final        int    page;
     private final        int    emojiSize;
-    private static final Paint  placeholderPaint;
     private static final Paint  paint;
     private              Bitmap bmp;
 
     static {
       paint = new Paint();
       paint.setFilterBitmap(true);
-      placeholderPaint = new Paint();
-      placeholderPaint.setColor(0x55000000);
     }
 
     public EmojiDrawable(DrawInfo info, int emojiSize) {
@@ -373,7 +382,6 @@ public class Emoji {
     public void draw(Canvas canvas) {
       if (bitmaps[page] == null) {
         Log.w("Emoji", "bitmap for this page was null");
-        canvas.drawRect(getBounds(), placeholderPaint);
         return;
       }
       if (bmp == null) {

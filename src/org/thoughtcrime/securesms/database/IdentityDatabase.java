@@ -24,15 +24,13 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.net.Uri;
 import android.util.Log;
 
-import org.thoughtcrime.securesms.recipients.Recipient;
 import org.thoughtcrime.securesms.recipients.RecipientFactory;
 import org.thoughtcrime.securesms.recipients.Recipients;
-import org.whispersystems.textsecure.crypto.IdentityKey;
-import org.whispersystems.textsecure.crypto.InvalidKeyException;
-import org.whispersystems.textsecure.crypto.MasterCipher;
-import org.whispersystems.textsecure.crypto.MasterSecret;
-import org.whispersystems.textsecure.crypto.ecc.Curve;
-import org.whispersystems.textsecure.util.Base64;
+import org.thoughtcrime.securesms.util.Base64;
+import org.whispersystems.libaxolotl.IdentityKey;
+import org.whispersystems.libaxolotl.InvalidKeyException;
+import org.thoughtcrime.securesms.crypto.MasterCipher;
+import org.thoughtcrime.securesms.crypto.MasterSecret;
 
 import java.io.IOException;
 
@@ -145,8 +143,8 @@ public class IdentityDatabase extends Database {
     }
 
     public Identity getCurrent() {
-      long recipientId      = cursor.getLong(cursor.getColumnIndexOrThrow(RECIPIENT));
-      Recipients recipients = RecipientFactory.getRecipientsForIds(context, recipientId + "", true);
+      long       recipientId = cursor.getLong(cursor.getColumnIndexOrThrow(RECIPIENT));
+      Recipients recipients  = RecipientFactory.getRecipientsForIds(context, new long[]{recipientId}, true);
 
       try {
         String identityKeyString = cursor.getString(cursor.getColumnIndexOrThrow(IDENTITY_KEY));

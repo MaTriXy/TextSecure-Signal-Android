@@ -16,7 +16,6 @@
  */
 package org.thoughtcrime.securesms;
 
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
@@ -24,60 +23,57 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.AsyncTask;
-import android.os.Build;
-import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
-import android.provider.Telephony;
+import android.support.v4.app.ListFragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.Loader;
 import android.text.TextUtils;
-import android.util.Log;
+import android.support.v7.app.ActionBarActivity;
+import android.support.v7.view.ActionMode;
+import android.support.v4.widget.CursorAdapter;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.Button;
-import android.widget.CursorAdapter;
-import android.widget.ImageButton;
-import android.widget.ImageView;
 import android.widget.ListView;
-import android.widget.TextView;
 
-import com.actionbarsherlock.app.SherlockListFragment;
-import com.actionbarsherlock.view.ActionMode;
-import com.actionbarsherlock.view.Menu;
-import com.actionbarsherlock.view.MenuInflater;
-import com.actionbarsherlock.view.MenuItem;
-import com.actionbarsherlock.widget.SearchView;
+import com.melnykov.fab.FloatingActionButton;
 
+import org.thoughtcrime.securesms.components.DefaultSmsReminder;
+import org.thoughtcrime.securesms.components.ExpiredBuildReminder;
+import org.thoughtcrime.securesms.components.PushRegistrationReminder;
+import org.thoughtcrime.securesms.components.ReminderView;
+import org.thoughtcrime.securesms.components.SystemSmsImportReminder;
 import org.thoughtcrime.securesms.database.DatabaseFactory;
 import org.thoughtcrime.securesms.database.loaders.ConversationListLoader;
 import org.thoughtcrime.securesms.notifications.MessageNotifier;
 import org.thoughtcrime.securesms.recipients.Recipients;
-import org.thoughtcrime.securesms.service.ApplicationMigrationService;
 import org.thoughtcrime.securesms.util.Dialogs;
-import org.thoughtcrime.securesms.util.TextSecurePreferences;
-import org.whispersystems.textsecure.crypto.MasterSecret;
-import org.thoughtcrime.securesms.util.Util;
+import org.thoughtcrime.securesms.crypto.MasterSecret;
 
 import java.util.Set;
 
 
-public class ConversationListFragment extends SherlockListFragment
+public class ConversationListFragment extends ListFragment
   implements LoaderManager.LoaderCallbacks<Cursor>, ActionMode.Callback
 {
 
   private ConversationSelectedListener listener;
   private MasterSecret                 masterSecret;
   private ActionMode                   actionMode;
-  private View reminderView;
-  private String queryFilter = "";
+  private ReminderView                 reminderView;
+  private FloatingActionButton         fab;
+  private String                       queryFilter  = "";
 
   @Override
   public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle bundle) {
     final View view = inflater.inflate(R.layout.conversation_list_fragment, container, false);
-    reminderView = LayoutInflater.from(getActivity()).inflate(R.layout.reminder_header, null);
+    reminderView = new ReminderView(getActivity());
+    fab          = (FloatingActionButton) view.findViewById(R.id.fab);
     return view;
   }
 
@@ -94,6 +90,14 @@ public class ConversationListFragment extends SherlockListFragment
     setHasOptionsMenu(true);
     getListView().setAdapter(null);
     getListView().addHeaderView(reminderView);
+    fab.setOnClickListener(new OnClickListener() {
+      @Override
+      public void onClick(View v) {
+        Intent intent = new Intent(getActivity(), NewConversationActivity.class);
+        intent.putExtra(NewConversationActivity.MASTER_SECRET_EXTRA, masterSecret);
+        startActivity(intent);
+      }
+    });
     initializeListAdapter();
     initializeBatchListener();
 
@@ -111,20 +115,6 @@ public class ConversationListFragment extends SherlockListFragment
   public void onAttach(Activity activity) {
     super.onAttach(activity);
     this.listener = (ConversationSelectedListener)activity;
-  }
-
-  @Override
-  public void onPrepareOptionsMenu(Menu menu) {
-    MenuInflater inflater = this.getSherlockActivity().getSupportMenuInflater();
-
-    if (this.masterSecret != null) {
-      inflater.inflate(R.menu.conversation_list, menu);
-      initializeSearch((SearchView)menu.findItem(R.id.menu_search).getActionView());
-    } else {
-      inflater.inflate(R.menu.conversation_list_empty, menu);
-    }
-
-    super.onPrepareOptionsMenu(menu);
   }
 
   @Override
@@ -157,7 +147,7 @@ public class ConversationListFragment extends SherlockListFragment
     }
   }
 
-  private void setQueryFilter(String query) {
+  public void setQueryFilter(String query) {
     this.queryFilter = query;
     getLoaderManager().restartLoader(0, null, this);
   }
@@ -168,30 +158,12 @@ public class ConversationListFragment extends SherlockListFragment
     }
   }
 
-  private void initializeSearch(SearchView searchView) {
-    searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
-      @Override
-      public boolean onQueryTextSubmit(String query) {
-        if (isAdded()) {
-          setQueryFilter(query);
-          return true;
-        }
-        return false;
-      }
-
-      @Override
-      public boolean onQueryTextChange(String newText) {
-        return onQueryTextSubmit(newText);
-      }
-    });
-  }
-
   private void initializeBatchListener() {
     getListView().setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
       @Override
       public boolean onItemLongClick(AdapterView<?> arg0, View v, int position, long id) {
         ConversationListAdapter adapter = (ConversationListAdapter)getListAdapter();
-        actionMode = getSherlockActivity().startActionMode(ConversationListFragment.this);
+        actionMode = ((ActionBarActivity)getActivity()).startSupportActionMode(ConversationListFragment.this);
 
         adapter.initializeBatchMode(true);
         adapter.toggleThreadInBatchSet(((ConversationListItem) v).getThreadId());
@@ -203,17 +175,16 @@ public class ConversationListFragment extends SherlockListFragment
   }
 
   private void initializeReminders() {
-    final boolean isDefault = Util.isDefaultSmsProvider(getActivity());
-    if (isDefault) {
-      TextSecurePreferences.setPromptedDefaultSmsProvider(getActivity(), false);
-    }
-
-    if (!isDefault && !TextSecurePreferences.hasPromptedDefaultSmsProvider(getActivity())) {
-      showDefaultSmsReminder();
-    } else if (isDefault && !ApplicationMigrationService.isDatabaseImported(getActivity())) {
-      showSystemSmsImportReminder();
+    if (ExpiredBuildReminder.isEligible(getActivity())) {
+      reminderView.showReminder(new ExpiredBuildReminder());
+    } else if (DefaultSmsReminder.isEligible(getActivity())) {
+      reminderView.showReminder(new DefaultSmsReminder(getActivity()));
+    } else if (SystemSmsImportReminder.isEligible(getActivity())) {
+      reminderView.showReminder(new SystemSmsImportReminder(getActivity(), masterSecret));
+    } else if (PushRegistrationReminder.isEligible(getActivity())) {
+      reminderView.showReminder(new PushRegistrationReminder(getActivity(), masterSecret));
     } else {
-      reminderView.findViewById(R.id.container).setVisibility(View.GONE);
+      reminderView.hide();
     }
   }
 
@@ -243,8 +214,8 @@ public class ConversationListFragment extends SherlockListFragment
             @Override
             protected void onPreExecute() {
               dialog = ProgressDialog.show(getActivity(),
-                                           getSherlockActivity().getString(R.string.ConversationListFragment_deleting),
-                                           getSherlockActivity().getString(R.string.ConversationListFragment_deleting_selected_threads),
+                                           getActivity().getString(R.string.ConversationListFragment_deleting),
+                                           getActivity().getString(R.string.ConversationListFragment_deleting_selected_threads),
                                            true, false);
             }
 
@@ -278,12 +249,6 @@ public class ConversationListFragment extends SherlockListFragment
                            ((ConversationListAdapter)this.getListAdapter()).getBatchSelections().size()));
   }
 
-  private void handleUnselectAllThreads() {
-    ((ConversationListAdapter)this.getListAdapter()).selectAllThreads();
-    actionMode.setSubtitle(getString(R.string.conversation_fragment_cab__batch_selection_amount,
-                           ((ConversationListAdapter)this.getListAdapter()).getBatchSelections().size()));
-  }
-
   private void handleCreateConversation(long threadId, Recipients recipients, int distributionType) {
     listener.onCreateConversation(threadId, recipients, distributionType);
   }
@@ -309,7 +274,7 @@ public class ConversationListFragment extends SherlockListFragment
 
   @Override
   public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-    MenuInflater inflater = getSherlockActivity().getSupportMenuInflater();
+    MenuInflater inflater = getActivity().getMenuInflater();
     inflater.inflate(R.menu.conversation_list_batch, menu);
 
     mode.setTitle(R.string.conversation_fragment_cab__batch_selection_mode);
@@ -337,79 +302,6 @@ public class ConversationListFragment extends SherlockListFragment
   public void onDestroyActionMode(ActionMode mode) {
     ((ConversationListAdapter)getListAdapter()).initializeBatchMode(false);
     actionMode = null;
-  }
-
-  @TargetApi(VERSION_CODES.KITKAT)
-  private void showDefaultSmsReminder() {
-    final ViewGroup container = (ViewGroup) reminderView.findViewById(R.id.container);
-
-    setReminderData(R.drawable.sms_selection_icon,
-                    R.string.reminder_header_sms_default_title,
-                    R.string.reminder_header_sms_default_text,
-                    new OnClickListener() {
-                      @Override
-                      public void onClick(View v) {
-                        TextSecurePreferences.setPromptedDefaultSmsProvider(getActivity(), true);
-                        Intent intent = new Intent(Telephony.Sms.Intents.ACTION_CHANGE_DEFAULT);
-                        intent.putExtra(Telephony.Sms.Intents.EXTRA_PACKAGE_NAME, getActivity().getPackageName());
-                        startActivity(intent);
-                      }
-                    },
-                    new OnClickListener() {
-                      @Override
-                      public void onClick(View v) {
-                        TextSecurePreferences.setPromptedDefaultSmsProvider(getActivity(), true);
-                        container.setVisibility(View.GONE);
-                      }
-                    });
-    container.setVisibility(View.VISIBLE);
-  }
-
-  private void showSystemSmsImportReminder() {
-    final ViewGroup container = (ViewGroup) reminderView.findViewById(R.id.container);
-
-    setReminderData(R.drawable.sms_system_import_icon,
-                    R.string.reminder_header_sms_import_title,
-                    R.string.reminder_header_sms_import_text,
-                    new OnClickListener() {
-                      @Override
-                      public void onClick(View v) {
-                        Intent intent = new Intent(getActivity(), ApplicationMigrationService.class);
-                        intent.setAction(ApplicationMigrationService.MIGRATE_DATABASE);
-                        intent.putExtra("master_secret", masterSecret);
-                        getActivity().startService(intent);
-
-                        Intent nextIntent = new Intent(getActivity(), ConversationListActivity.class);
-                        intent.putExtra("master_secret", masterSecret);
-
-                        Intent activityIntent = new Intent(getActivity(), DatabaseMigrationActivity.class);
-                        activityIntent.putExtra("master_secret", masterSecret);
-                        activityIntent.putExtra("next_intent", nextIntent);
-                        getActivity().startActivity(activityIntent);
-                      }
-                    },
-                    new OnClickListener() {
-                      @Override
-                      public void onClick(View v) {
-                        ApplicationMigrationService.setDatabaseImported(getActivity());
-                        container.setVisibility(View.GONE);
-                      }
-                    });
-    container.setVisibility(View.VISIBLE);
-  }
-
-  private void setReminderData(int iconResId, int titleResId, int textResId, OnClickListener okListener, OnClickListener cancelListener) {
-    final ImageButton cancel = (ImageButton) reminderView.findViewById(R.id.cancel);
-    final Button      ok     = (Button     ) reminderView.findViewById(R.id.ok);
-    final TextView    title  = (TextView   ) reminderView.findViewById(R.id.reminder_title);
-    final TextView    text   = (TextView   ) reminderView.findViewById(R.id.reminder_text);
-    final ImageView   icon   = (ImageView  ) reminderView.findViewById(R.id.icon);
-
-    icon.setImageResource(iconResId);
-    title.setText(titleResId);
-    text.setText(textResId);
-    ok.setOnClickListener(okListener);
-    cancel.setOnClickListener(cancelListener);
   }
 
 }

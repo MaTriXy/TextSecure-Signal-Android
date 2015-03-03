@@ -9,15 +9,14 @@ import org.thoughtcrime.securesms.database.DatabaseFactory;
 import org.thoughtcrime.securesms.recipients.RecipientFactory;
 import org.thoughtcrime.securesms.recipients.RecipientFormattingException;
 import org.thoughtcrime.securesms.recipients.Recipients;
-import org.thoughtcrime.securesms.service.ApplicationMigrationService;
-import org.thoughtcrime.securesms.service.GcmRegistrationService;
 import org.thoughtcrime.securesms.util.TextSecurePreferences;
-import org.whispersystems.textsecure.crypto.MasterSecret;
+import org.thoughtcrime.securesms.crypto.MasterSecret;
 
-public class RoutingActivity extends PassphraseRequiredSherlockActivity {
+public class RoutingActivity extends PassphraseRequiredActionBarActivity {
 
   private static final int STATE_CREATE_PASSPHRASE        = 1;
   private static final int STATE_PROMPT_PASSPHRASE        = 2;
+
   private static final int STATE_CONVERSATION_OR_LIST     = 3;
   private static final int STATE_UPGRADE_DATABASE         = 4;
   private static final int STATE_PROMPT_PUSH_REGISTRATION = 5;
@@ -120,15 +119,9 @@ public class RoutingActivity extends PassphraseRequiredSherlockActivity {
     final ConversationParameters parameters = getConversationParameters();
     final Intent intent;
 
-    scheduleRefreshActions();
-
-    if (isShareAction()) {
-      intent = getShareIntent(parameters);
-    } else if (parameters.recipients != null) {
-      intent = getConversationIntent(parameters);
-    } else {
-      intent = getConversationListIntent();
-    }
+    if      (isShareAction())               intent = getShareIntent(parameters);
+    else if (parameters.recipients != null) intent = getConversationIntent(parameters);
+    else                                    intent = getConversationListIntent();
 
     startActivity(intent);
     finish();
@@ -136,7 +129,7 @@ public class RoutingActivity extends PassphraseRequiredSherlockActivity {
 
   private Intent getConversationIntent(ConversationParameters parameters) {
     Intent intent = new Intent(this, ConversationActivity.class);
-    intent.putExtra(ConversationActivity.RECIPIENTS_EXTRA, parameters.recipients != null ? parameters.recipients.toIdString() : "");
+    intent.putExtra(ConversationActivity.RECIPIENTS_EXTRA, parameters.recipients != null ? parameters.recipients.getIds() : new long[]{});
     intent.putExtra(ConversationActivity.THREAD_ID_EXTRA, parameters.thread);
     intent.putExtra(ConversationActivity.MASTER_SECRET_EXTRA, masterSecret);
     intent.putExtra(ConversationActivity.DRAFT_TEXT_EXTRA, parameters.draftText);
@@ -175,15 +168,6 @@ public class RoutingActivity extends PassphraseRequiredSherlockActivity {
     return intent;
   }
 
-  private void scheduleRefreshActions() {
-    if (TextSecurePreferences.isPushRegistered(this) &&
-        TextSecurePreferences.getGcmRegistrationId(this) == null)
-    {
-      Intent intent = new Intent(this, GcmRegistrationService.class);
-      startService(intent);
-    }
-  }
-
   private int getApplicationState() {
     if (!MasterSecretUtil.isPassphraseInitialized(this))
       return STATE_CREATE_PASSPHRASE;
@@ -212,7 +196,8 @@ public class RoutingActivity extends PassphraseRequiredSherlockActivity {
 
   private ConversationParameters getConversationParametersForSendAction() {
     Recipients recipients;
-    long       threadId = getIntent().getLongExtra("thread_id", -1);
+    String body     = getIntent().getStringExtra("sms_body");
+    long   threadId = getIntent().getLongExtra("thread_id", -1);
 
     try {
       String data = getIntent().getData().getSchemeSpecificPart();
@@ -222,7 +207,7 @@ public class RoutingActivity extends PassphraseRequiredSherlockActivity {
       recipients = null;
     }
 
-    return new ConversationParameters(threadId, recipients, null, null, null, null);
+    return new ConversationParameters(threadId, recipients, body, null, null, null);
   }
 
   private ConversationParameters getConversationParametersForShareAction() {
@@ -261,8 +246,9 @@ public class RoutingActivity extends PassphraseRequiredSherlockActivity {
   }
 
   private ConversationParameters getConversationParametersForInternalAction() {
-    long threadId         = getIntent().getLongExtra("thread_id", -1);
-    Recipients recipients = getIntent().getParcelableExtra("recipients");
+    long   threadId       = getIntent().getLongExtra("thread_id", -1);
+    long[] recipientIds   = getIntent().getLongArrayExtra("recipients");
+    Recipients recipients = recipientIds == null ? null : RecipientFactory.getRecipientsForIds(this, recipientIds, true);
 
     return new ConversationParameters(threadId, recipients, null, null, null, null);
   }

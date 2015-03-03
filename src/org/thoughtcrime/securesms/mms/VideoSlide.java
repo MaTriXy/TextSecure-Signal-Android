@@ -19,49 +19,72 @@ package org.thoughtcrime.securesms.mms;
 import java.io.IOException;
 
 import org.thoughtcrime.securesms.R;
+import org.thoughtcrime.securesms.crypto.MasterSecret;
+import org.thoughtcrime.securesms.util.SmilUtil;
+import org.thoughtcrime.securesms.util.ThemeUtil;
+import org.w3c.dom.smil.SMILDocument;
+import org.w3c.dom.smil.SMILMediaElement;
+import org.w3c.dom.smil.SMILRegionElement;
 
 import ws.com.google.android.mms.pdu.PduPart;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.res.TypedArray;
 import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.util.Log;
-import android.widget.ImageView;
 
 public class VideoSlide extends Slide {
-
-  public VideoSlide(Context context, PduPart part) {
-    super(context, part);
-  }
 
   public VideoSlide(Context context, Uri uri) throws IOException, MediaTooLargeException {
     super(context, constructPartFromUri(context, uri));
   }
-	
+
+  public VideoSlide(Context context, MasterSecret masterSecret, PduPart part) {
+    super(context, masterSecret, part);
+  }
+
   @Override
-  public Drawable getThumbnail(int width, int height) {
-    return context.getResources().getDrawable(R.drawable.ic_launcher_video_player);
+  public Drawable getThumbnail(Context context, int width, int height) {
+    return ThemeUtil.resolveIcon(context, R.attr.conversation_icon_attach_video);
   }
 
   @Override
   public boolean hasImage() {
     return true;
   }
-	
+
   @Override
   public boolean hasVideo() {
     return true;
   }
-	
-  private static PduPart constructPartFromUri(Context context, Uri uri) throws IOException, MediaTooLargeException {
-    PduPart part             = new PduPart();
+
+  @Override
+  public SMILRegionElement getSmilRegion(SMILDocument document) {
+    SMILRegionElement region = (SMILRegionElement) document.createElement("region");
+    region.setId("Image");
+    region.setLeft(0);
+    region.setTop(0);
+    region.setWidth(SmilUtil.ROOT_WIDTH);
+    region.setHeight(SmilUtil.ROOT_HEIGHT);
+    region.setFit("meet");
+    return region;
+  }
+
+  @Override
+  public SMILMediaElement getMediaElement(SMILDocument document) {
+    return SmilUtil.createMediaElement("video", document, new String(getPart().getName()));
+  }
+
+  private static PduPart constructPartFromUri(Context context, Uri uri)
+      throws IOException, MediaTooLargeException
+  {
+    PduPart         part     = new PduPart();
     ContentResolver resolver = context.getContentResolver();
-    Cursor cursor            = null;
-		
+    Cursor          cursor   = null;
+
     try {
       cursor = resolver.query(uri, new String[] {MediaStore.Video.Media.MIME_TYPE}, null, null, null);
       if (cursor != null && cursor.moveToFirst()) {
@@ -72,14 +95,12 @@ public class VideoSlide extends Slide {
       if (cursor != null)
         cursor.close();
     }
-		
-    if (getMediaSize(context, uri) > MAX_MESSAGE_SIZE)
-      throw new MediaTooLargeException("Video exceeds maximum message size.");
-		
+
+    assertMediaSize(context, uri);
     part.setDataUri(uri);
     part.setContentId((System.currentTimeMillis()+"").getBytes());
     part.setName(("Video" + System.currentTimeMillis()).getBytes());
-		
+
     return part;
   }
 }

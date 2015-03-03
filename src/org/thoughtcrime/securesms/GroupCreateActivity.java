@@ -18,7 +18,6 @@
 package org.thoughtcrime.securesms;
 
 import android.app.Activity;
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -27,10 +26,12 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.text.Editable;
-import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.util.Pair;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageView;
@@ -38,10 +39,8 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.actionbarsherlock.view.Menu;
-import com.actionbarsherlock.view.MenuInflater;
-import com.actionbarsherlock.view.MenuItem;
 import com.google.protobuf.ByteString;
+import com.soundcloud.android.crop.Crop;
 
 import org.thoughtcrime.securesms.components.PushRecipientsPanel;
 import org.thoughtcrime.securesms.contacts.ContactAccessor;
@@ -55,21 +54,23 @@ import org.thoughtcrime.securesms.recipients.RecipientFactory;
 import org.thoughtcrime.securesms.recipients.RecipientFormattingException;
 import org.thoughtcrime.securesms.recipients.Recipients;
 import org.thoughtcrime.securesms.sms.MessageSender;
+import org.thoughtcrime.securesms.util.BitmapDecodingException;
 import org.thoughtcrime.securesms.util.BitmapUtil;
 import org.thoughtcrime.securesms.util.DynamicLanguage;
 import org.thoughtcrime.securesms.util.DynamicTheme;
 import org.thoughtcrime.securesms.util.GroupUtil;
+import org.thoughtcrime.securesms.util.ProgressDialogAsyncTask;
 import org.thoughtcrime.securesms.util.SelectedRecipientsAdapter;
 import org.thoughtcrime.securesms.util.TextSecurePreferences;
 import org.thoughtcrime.securesms.util.Util;
-import org.whispersystems.textsecure.crypto.MasterSecret;
-import org.whispersystems.textsecure.directory.Directory;
-import org.whispersystems.textsecure.directory.NotInDirectoryException;
-import org.whispersystems.textsecure.util.InvalidNumberException;
+import org.thoughtcrime.securesms.crypto.MasterSecret;
+import org.thoughtcrime.securesms.database.TextSecureDirectory;
+import org.thoughtcrime.securesms.database.NotInDirectoryException;
+import org.whispersystems.textsecure.api.util.InvalidNumberException;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.InputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -81,20 +82,20 @@ import java.util.Set;
 import ws.com.google.android.mms.MmsException;
 
 import static org.thoughtcrime.securesms.contacts.ContactAccessor.ContactData;
-import static org.whispersystems.textsecure.push.PushMessageProtos.PushMessageContent.GroupContext;
+import static org.whispersystems.textsecure.internal.push.PushMessageProtos.PushMessageContent.GroupContext;
 
 /**
  * Activity to create and update groups
  *
  * @author Jake McGinty
  */
-public class GroupCreateActivity extends PassphraseRequiredSherlockFragmentActivity {
+public class GroupCreateActivity extends PassphraseRequiredActionBarActivity {
 
   private final static String TAG = GroupCreateActivity.class.getSimpleName();
 
   public static final String GROUP_RECIPIENT_EXTRA = "group_recipient";
-  public static final String GROUP_THREAD_EXTRA = "group_thread";
-  public static final String MASTER_SECRET_EXTRA    = "master_secret";
+  public static final String GROUP_THREAD_EXTRA    = "group_thread";
+  public static final String MASTER_SECRET_EXTRA   = "master_secret";
 
   private final DynamicTheme    dynamicTheme    = new DynamicTheme();
   private final DynamicLanguage dynamicLanguage = new DynamicLanguage();
@@ -108,9 +109,8 @@ public class GroupCreateActivity extends PassphraseRequiredSherlockFragmentActiv
   private PushRecipientsPanel recipientsPanel;
   private ImageView           avatar;
   private TextView            creatingText;
-  private ProgressDialog      pd;
 
-  private Recipients     groupRecipient    = null;
+  private Recipient      groupRecipient    = null;
   private long           groupThread       = -1;
   private byte[]         groupId           = null;
   private Set<Recipient> existingContacts  = null;
@@ -162,15 +162,16 @@ public class GroupCreateActivity extends PassphraseRequiredSherlockFragmentActiv
     avatar.setEnabled(true);
     groupName.setEnabled(true);
     final CharSequence groupNameText = groupName.getText();
-    if (groupNameText != null && groupNameText.length() > 0)
+    if (groupNameText != null && groupNameText.length() > 0) {
       getSupportActionBar().setTitle(groupNameText);
-    else
+    } else {
       getSupportActionBar().setTitle(R.string.GroupCreateActivity_actionbar_title);
+    }
   }
 
   private static boolean isActiveInDirectory(Context context, Recipient recipient) {
     try {
-      if (!Directory.getInstance(context).isActiveNumber(Util.canonicalizeNumber(context, recipient.getNumber()))) {
+      if (!TextSecureDirectory.getInstance(context).isActiveNumber(Util.canonicalizeNumber(context, recipient.getNumber()))) {
         return false;
       }
     } catch (NotInDirectoryException e) {
@@ -216,10 +217,10 @@ public class GroupCreateActivity extends PassphraseRequiredSherlockFragmentActiv
   }
 
   private void initializeResources() {
-    groupRecipient = getIntent().getParcelableExtra(GROUP_RECIPIENT_EXTRA);
+    groupRecipient = RecipientFactory.getRecipientForId(this, getIntent().getLongExtra(GROUP_RECIPIENT_EXTRA, -1), true);
     groupThread = getIntent().getLongExtra(GROUP_THREAD_EXTRA, -1);
     if (groupRecipient != null) {
-      final String encodedGroupId = groupRecipient.getPrimaryRecipient().getNumber();
+      final String encodedGroupId = groupRecipient.getNumber();
       if (encodedGroupId != null) {
         try {
           groupId = GroupUtil.getDecodedId(encodedGroupId);
@@ -248,13 +249,13 @@ public class GroupCreateActivity extends PassphraseRequiredSherlockFragmentActiv
       public void onTextChanged(CharSequence charSequence, int i, int i2, int i3) { }
       @Override
       public void afterTextChanged(Editable editable) {
+        final int prefixResId = (groupId != null)
+                                ? R.string.GroupCreateActivity_actionbar_update_title
+                                : R.string.GroupCreateActivity_actionbar_title;
         if (editable.length() > 0) {
-          final int prefixResId = (groupId != null)
-                                  ? R.string.GroupCreateActivity_actionbar_update_title
-                                  : R.string.GroupCreateActivity_actionbar_title;
           getSupportActionBar().setTitle(getString(prefixResId) + ": " + editable.toString());
         } else {
-          getSupportActionBar().setTitle(R.string.GroupCreateActivity_actionbar_title);
+          getSupportActionBar().setTitle(prefixResId);
         }
       }
     });
@@ -283,9 +284,7 @@ public class GroupCreateActivity extends PassphraseRequiredSherlockFragmentActiv
     avatar.setOnClickListener(new View.OnClickListener() {
       @Override
       public void onClick(View view) {
-        Intent photoPickerIntent = new Intent(Intent.ACTION_GET_CONTENT, null);
-        photoPickerIntent.setType("image/*");
-        startActivityForResult(photoPickerIntent, PICK_AVATAR);
+        Crop.pickImage(GroupCreateActivity.this);
       }
     });
 
@@ -294,7 +293,7 @@ public class GroupCreateActivity extends PassphraseRequiredSherlockFragmentActiv
 
   @Override
   public boolean onPrepareOptionsMenu(Menu menu) {
-    MenuInflater inflater = this.getSupportMenuInflater();
+    MenuInflater inflater = this.getMenuInflater();
     menu.clear();
 
     inflater.inflate(R.menu.group_create, menu);
@@ -325,7 +324,7 @@ public class GroupCreateActivity extends PassphraseRequiredSherlockFragmentActiv
       return;
     }
     if (whisperGroupUiEnabled()) {
-      enableWhisperGroupCreatingUi();
+      enableWhisperGroupProgressUi(false);
       new CreateWhisperGroupAsyncTask().execute();
     } else {
       new CreateMmsGroupAsyncTask().execute();
@@ -333,19 +332,25 @@ public class GroupCreateActivity extends PassphraseRequiredSherlockFragmentActiv
   }
 
   private void handleGroupUpdate() {
-    Log.w("GroupCreateActivity", "Creating...");
+    if (whisperGroupUiEnabled()) {
+      enableWhisperGroupProgressUi(true);
+    }
     new UpdateWhisperGroupAsyncTask().execute();
   }
 
-  private void enableWhisperGroupCreatingUi() {
+  private void enableWhisperGroupProgressUi(boolean isGroupUpdate) {
     findViewById(R.id.group_details_layout).setVisibility(View.GONE);
     findViewById(R.id.creating_group_layout).setVisibility(View.VISIBLE);
     findViewById(R.id.menu_create_group).setVisibility(View.GONE);
-    if (groupName.getText() != null)
-      creatingText.setText(getString(R.string.GroupCreateActivity_creating_group, groupName.getText().toString()));
+    if (groupName.getText() != null) {
+      final int titleResId = isGroupUpdate
+                             ? R.string.GroupCreateActivity_updating_group
+                             : R.string.GroupCreateActivity_creating_group;
+      creatingText.setText(getString(titleResId, groupName.getText().toString()));
+    }
   }
 
-  private void disableWhisperGroupCreatingUi() {
+  private void disableWhisperGroupProgressUi() {
     findViewById(R.id.group_details_layout).setVisibility(View.VISIBLE);
     findViewById(R.id.creating_group_layout).setVisibility(View.GONE);
     findViewById(R.id.menu_create_group).setVisibility(View.VISIBLE);
@@ -368,6 +373,7 @@ public class GroupCreateActivity extends PassphraseRequiredSherlockFragmentActiv
   @Override
   public void onActivityResult(int reqCode, int resultCode, Intent data) {
     super.onActivityResult(reqCode, resultCode, data);
+    Uri outputFile = Uri.fromFile(new File(getCacheDir(), "cropped"));
 
     if (data == null || resultCode != Activity.RESULT_OK)
       return;
@@ -381,8 +387,9 @@ public class GroupCreateActivity extends PassphraseRequiredSherlockFragmentActiv
               Recipient recipient = RecipientFactory.getRecipientsFromString(this, numberData.number, false)
                                                     .getPrimaryRecipient();
 
-              if (!selectedContacts.contains(recipient)
-                  && (existingContacts == null || !existingContacts.contains(recipient))) {
+              if (!selectedContacts.contains(recipient)                               &&
+                  (existingContacts == null || !existingContacts.contains(recipient)) &&
+                  recipient != null) {
                 addSelectedContact(recipient);
               }
             } catch (RecipientFormattingException e) {
@@ -393,9 +400,11 @@ public class GroupCreateActivity extends PassphraseRequiredSherlockFragmentActiv
         syncAdapterWithSelectedContacts();
         break;
 
-      case PICK_AVATAR:
-        new DecodeCropAndSetAsyncTask(data.getData()).execute();
+      case Crop.REQUEST_PICK:
+        new Crop(data.getData()).output(outputFile).asSquare().start(this);
         break;
+      case Crop.REQUEST_CROP:
+        new DecodeCropAndSetAsyncTask(Crop.getOutput(data)).execute();
     }
   }
 
@@ -444,7 +453,7 @@ public class GroupCreateActivity extends PassphraseRequiredSherlockFragmentActiv
 
   private Pair<Long, Recipients> handlePushOperation(byte[] groupId, String groupName, byte[] avatar,
                                                      Set<String> e164numbers)
-      throws MmsException, InvalidNumberException
+      throws InvalidNumberException
   {
 
     try {
@@ -461,12 +470,9 @@ public class GroupCreateActivity extends PassphraseRequiredSherlockFragmentActiv
       OutgoingGroupMediaMessage outgoingMessage = new OutgoingGroupMediaMessage(this, groupRecipient, context, avatar);
       long                      threadId        = MessageSender.send(this, masterSecret, outgoingMessage, -1, false);
 
-      return new Pair<Long, Recipients>(threadId, groupRecipient);
+      return new Pair<>(threadId, groupRecipient);
     } catch (RecipientFormattingException e) {
       throw new AssertionError(e);
-    } catch (MmsException e) {
-      Log.w(TAG, e);
-      throw new MmsException(e);
     }
   }
 
@@ -507,14 +513,12 @@ public class GroupCreateActivity extends PassphraseRequiredSherlockFragmentActiv
     @Override
     protected Bitmap doInBackground(Void... voids) {
       if (avatarUri != null) {
-        InputStream inputStream;
         try {
-          inputStream = getApplicationContext().getContentResolver().openInputStream(avatarUri);
-        } catch (FileNotFoundException e) {
+          avatarBmp = BitmapUtil.createScaledBitmap(GroupCreateActivity.this, masterSecret, avatarUri, AVATAR_SIZE, AVATAR_SIZE);
+        } catch (IOException | BitmapDecodingException e) {
           Log.w(TAG, e);
           return null;
         }
-        avatarBmp = BitmapUtil.getScaledCircleCroppedBitmap(BitmapFactory.decodeStream(inputStream), AVATAR_SIZE);
       }
       return avatarBmp;
     }
@@ -541,7 +545,7 @@ public class GroupCreateActivity extends PassphraseRequiredSherlockFragmentActiv
         intent.putExtra(ConversationActivity.DISTRIBUTION_TYPE_EXTRA, ThreadDatabase.DistributionTypes.DEFAULT);
 
         ArrayList<Recipient> selectedContactsList = setToArrayList(selectedContacts);
-        intent.putExtra(ConversationActivity.RECIPIENTS_EXTRA, new Recipients(selectedContactsList).toIdString());
+        intent.putExtra(ConversationActivity.RECIPIENTS_EXTRA, new Recipients(selectedContactsList).getIds());
         startActivity(intent);
         finish();
       } else {
@@ -592,12 +596,12 @@ public class GroupCreateActivity extends PassphraseRequiredSherlockFragmentActiv
       if (threadId > -1) {
         Intent intent = getIntent();
         intent.putExtra(GROUP_THREAD_EXTRA, threadId);
-        intent.putExtra(GROUP_RECIPIENT_EXTRA, recipients);
+        intent.putExtra(GROUP_RECIPIENT_EXTRA, recipients.getIds());
         setResult(RESULT_OK, intent);
         finish();
       } else if (threadId == RES_BAD_NUMBER) {
         Toast.makeText(getApplicationContext(), R.string.GroupCreateActivity_contacts_invalid_number, Toast.LENGTH_LONG).show();
-        disableWhisperGroupCreatingUi();
+        disableWhisperGroupProgressUi();
       } else if (threadId == RES_MMS_EXCEPTION) {
         Toast.makeText(getApplicationContext(), R.string.GroupCreateActivity_contacts_mms_exception, Toast.LENGTH_LONG).show();
         setResult(RESULT_CANCELED);
@@ -640,12 +644,12 @@ public class GroupCreateActivity extends PassphraseRequiredSherlockFragmentActiv
         intent.putExtra(ConversationActivity.MASTER_SECRET_EXTRA, masterSecret);
         intent.putExtra(ConversationActivity.THREAD_ID_EXTRA, threadId);
         intent.putExtra(ConversationActivity.DISTRIBUTION_TYPE_EXTRA, ThreadDatabase.DistributionTypes.DEFAULT);
-        intent.putExtra(ConversationActivity.RECIPIENTS_EXTRA, recipients.toIdString());
+        intent.putExtra(ConversationActivity.RECIPIENTS_EXTRA, recipients.getIds());
         startActivity(intent);
         finish();
       } else if (threadId == RES_BAD_NUMBER) {
         Toast.makeText(getApplicationContext(), R.string.GroupCreateActivity_contacts_invalid_number, Toast.LENGTH_LONG).show();
-        disableWhisperGroupCreatingUi();
+        disableWhisperGroupProgressUi();
       } else if (threadId == RES_MMS_EXCEPTION) {
         Toast.makeText(getApplicationContext(), R.string.GroupCreateActivity_contacts_mms_exception, Toast.LENGTH_LONG).show();
         finish();
@@ -658,16 +662,12 @@ public class GroupCreateActivity extends PassphraseRequiredSherlockFragmentActiv
     }
   }
 
-  private class FillExistingGroupInfoAsyncTask extends AsyncTask<Void,Void,Void> {
+  private class FillExistingGroupInfoAsyncTask extends ProgressDialogAsyncTask<Void,Void,Void> {
 
-    @Override
-    protected void onPreExecute() {
-      pd = new ProgressDialog(GroupCreateActivity.this);
-      pd.setTitle("Loading group details...");
-      pd.setMessage("Please wait.");
-      pd.setCancelable(false);
-      pd.setIndeterminate(true);
-      pd.show();
+    public FillExistingGroupInfoAsyncTask() {
+      super(GroupCreateActivity.this,
+            R.string.GroupCreateActivity_loading_group_details,
+            R.string.please_wait);
     }
 
     @Override
@@ -678,7 +678,7 @@ public class GroupCreateActivity extends PassphraseRequiredSherlockFragmentActiv
         final List<Recipient> recipientList = recipients.getRecipientsList();
         if (recipientList != null) {
           if (existingContacts == null)
-            existingContacts = new HashSet<Recipient>(recipientList.size());
+            existingContacts = new HashSet<>(recipientList.size());
           existingContacts.addAll(recipientList);
         }
       }
@@ -687,8 +687,7 @@ public class GroupCreateActivity extends PassphraseRequiredSherlockFragmentActiv
         existingTitle = group.getTitle();
         final byte[] existingAvatar = group.getAvatar();
         if (existingAvatar != null) {
-          existingAvatarBmp = BitmapUtil.getCircleCroppedBitmap(
-              BitmapFactory.decodeByteArray(existingAvatar, 0, existingAvatar.length));
+          existingAvatarBmp = BitmapFactory.decodeByteArray(existingAvatar, 0, existingAvatar.length);
         }
       }
       return null;
@@ -698,7 +697,6 @@ public class GroupCreateActivity extends PassphraseRequiredSherlockFragmentActiv
     protected void onPostExecute(Void aVoid) {
       super.onPostExecute(aVoid);
 
-      if (pd != null) pd.dismiss();
       if (existingTitle != null) groupName.setText(existingTitle);
       if (existingAvatarBmp != null) avatar.setImageBitmap(existingAvatarBmp);
       if (existingContacts != null) syncAdapterWithSelectedContacts();
