@@ -22,6 +22,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.net.Uri;
+import android.support.annotation.NonNull;
 import android.telephony.TelephonyManager;
 import android.text.TextUtils;
 import android.util.Log;
@@ -339,15 +340,13 @@ public class MmsDatabase extends MessagingDatabase {
     }
   }
 
-  private long getThreadIdFor(NotificationInd notification) throws RecipientFormattingException {
-    try {
-      EncodedStringValue encodedString = notification.getFrom();
-      String fromString                = new String(encodedString.getTextString(), CharacterSets.MIMENAME_ISO_8859_1);
-      Recipients recipients            = RecipientFactory.getRecipientsFromString(context, fromString, false);
-      return DatabaseFactory.getThreadDatabase(context).getThreadIdFor(recipients);
-    } catch (UnsupportedEncodingException e) {
-      throw new AssertionError(e);
-    }
+  private long getThreadIdFor(@NonNull NotificationInd notification) {
+    String fromString = notification.getFrom() != null && notification.getFrom().getTextString() != null
+                      ? Util.toIsoString(notification.getFrom().getTextString())
+                      : "";
+    Recipients recipients = RecipientFactory.getRecipientsFromString(context, fromString, false);
+    if (recipients.isEmpty()) recipients = new Recipients(Recipient.getUnknownRecipient(context));
+    return DatabaseFactory.getThreadDatabase(context).getThreadIdFor(recipients);
   }
 
   public Cursor getMessage(long messageId) {
@@ -380,11 +379,6 @@ public class MmsDatabase extends MessagingDatabase {
 
   public void markAsForcedSms(long messageId) {
     updateMailboxBitmask(messageId, 0, Types.MESSAGE_FORCE_SMS_BIT);
-    notifyConversationListeners(getThreadIdForMessage(messageId));
-  }
-
-  public void markAsPendingSecureSmsFallback(long messageId) {
-    updateMailboxBitmask(messageId, Types.BASE_TYPE_MASK, Types.BASE_PENDING_SECURE_SMS_FALLBACK);
     notifyConversationListeners(getThreadIdForMessage(messageId));
   }
 
@@ -651,38 +645,28 @@ public class MmsDatabase extends MessagingDatabase {
                               (retrieved.isPushMessage() ? Types.PUSH_MESSAGE_BIT : 0));
   }
 
-  public Pair<Long, Long> insertMessageInbox(NotificationInd notification) {
-    try {
-      SQLiteDatabase     db              = databaseHelper.getWritableDatabase();
-      MmsAddressDatabase addressDatabase = DatabaseFactory.getMmsAddressDatabase(context);
-      long               threadId        = getThreadIdFor(notification);
-      PduHeaders         headers         = notification.getPduHeaders();
-      ContentValues      contentValues   = getContentValuesFromHeader(headers);
+  public Pair<Long, Long> insertMessageInbox(@NonNull NotificationInd notification) {
+    SQLiteDatabase     db              = databaseHelper.getWritableDatabase();
+    MmsAddressDatabase addressDatabase = DatabaseFactory.getMmsAddressDatabase(context);
+    long               threadId        = getThreadIdFor(notification);
+    PduHeaders         headers         = notification.getPduHeaders();
+    ContentValues      contentValues   = getContentValuesFromHeader(headers);
 
-      Log.w("MmsDatabse", "Message received type: " + headers.getOctet(PduHeaders.MESSAGE_TYPE));
+    Log.w(TAG, "Message received type: " + headers.getOctet(PduHeaders.MESSAGE_TYPE));
 
-      contentValues.put(MESSAGE_BOX, Types.BASE_INBOX_TYPE);
-      contentValues.put(THREAD_ID, threadId);
-      contentValues.put(STATUS, Status.DOWNLOAD_INITIALIZED);
-      contentValues.put(DATE_RECEIVED, System.currentTimeMillis() / 1000);
-      contentValues.put(READ, org.thoughtcrime.securesms.util.Util.isDefaultSmsProvider(context) ? 0 : 1);
+    contentValues.put(MESSAGE_BOX, Types.BASE_INBOX_TYPE);
+    contentValues.put(THREAD_ID, threadId);
+    contentValues.put(STATUS, Status.DOWNLOAD_INITIALIZED);
+    contentValues.put(DATE_RECEIVED, System.currentTimeMillis() / 1000);
+    contentValues.put(READ, Util.isDefaultSmsProvider(context) ? 0 : 1);
 
-      if (!contentValues.containsKey(DATE_SENT))
-        contentValues.put(DATE_SENT, contentValues.getAsLong(DATE_RECEIVED));
+    if (!contentValues.containsKey(DATE_SENT))
+      contentValues.put(DATE_SENT, contentValues.getAsLong(DATE_RECEIVED));
 
-      long messageId = db.insert(TABLE_NAME, null, contentValues);
-      addressDatabase.insertAddressesForId(messageId, headers);
+    long messageId = db.insert(TABLE_NAME, null, contentValues);
+    addressDatabase.insertAddressesForId(messageId, headers);
 
-//      notifyConversationListeners(threadId);
-//      DatabaseFactory.getThreadDatabase(context).update(threadId);
-//      DatabaseFactory.getThreadDatabase(context).setUnread(threadId);
-//      Trimmer.trimThread(context, threadId);
-
-      return new Pair<Long, Long>(messageId, threadId);
-    } catch (RecipientFormattingException rfe) {
-      Log.w("MmsDatabase", rfe);
-      return new Pair<Long, Long>(-1L, -1L);
-    }
+    return new Pair<>(messageId, threadId);
   }
 
   public void markIncomingNotificationReceived(long threadId) {
@@ -1062,22 +1046,17 @@ public class MmsDatabase extends MessagingDatabase {
     }
 
     private Recipients getRecipientsFor(String address) {
-      try {
-        if (TextUtils.isEmpty(address) || address.equals("insert-address-token")) {
-          return new Recipients(Recipient.getUnknownRecipient(context));
-        }
-
-        Recipients recipients =  RecipientFactory.getRecipientsFromString(context, address, false);
-
-        if (recipients == null || recipients.isEmpty()) {
-          return new Recipients(Recipient.getUnknownRecipient(context));
-        }
-
-        return recipients;
-      } catch (RecipientFormattingException e) {
-        Log.w("MmsDatabase", e);
+      if (TextUtils.isEmpty(address) || address.equals("insert-address-token")) {
         return new Recipients(Recipient.getUnknownRecipient(context));
       }
+
+      Recipients recipients =  RecipientFactory.getRecipientsFromString(context, address, false);
+
+      if (recipients == null || recipients.isEmpty()) {
+        return new Recipients(Recipient.getUnknownRecipient(context));
+      }
+
+      return recipients;
     }
 
     private List<IdentityKeyMismatch> getMismatchedIdentities(String document) {

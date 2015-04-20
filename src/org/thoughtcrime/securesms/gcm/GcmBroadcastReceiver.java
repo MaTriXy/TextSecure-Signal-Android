@@ -1,19 +1,19 @@
 package org.thoughtcrime.securesms.gcm;
 
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.support.v4.content.WakefulBroadcastReceiver;
 import android.text.TextUtils;
 import android.util.Log;
 
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 
 import org.thoughtcrime.securesms.ApplicationContext;
-import org.thoughtcrime.securesms.jobs.PushReceiveJob;
-import org.thoughtcrime.securesms.service.MessageRetrievalService;
+import org.thoughtcrime.securesms.jobs.PushContentReceiveJob;
+import org.thoughtcrime.securesms.jobs.PushNotificationReceiveJob;
 import org.thoughtcrime.securesms.util.TextSecurePreferences;
 
-public class GcmBroadcastReceiver extends BroadcastReceiver {
+public class GcmBroadcastReceiver extends WakefulBroadcastReceiver {
 
   private static final String TAG = GcmBroadcastReceiver.class.getSimpleName();
 
@@ -42,10 +42,12 @@ public class GcmBroadcastReceiver extends BroadcastReceiver {
   private void handleReceivedMessage(Context context, String data) {
     ApplicationContext.getInstance(context)
                       .getJobManager()
-                      .add(new PushReceiveJob(context, data));
+                      .add(new PushContentReceiveJob(context, data));
   }
 
   private void handleReceivedNotification(Context context) {
-    MessageRetrievalService.registerPushReceived(context);
+    ApplicationContext.getInstance(context)
+                      .getJobManager()
+                      .add(new PushNotificationReceiveJob(context));
   }
 }

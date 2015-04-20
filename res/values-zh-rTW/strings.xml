@@ -25,9 +25,7 @@
         將來您若欲重新使用即時訊息，則須把您的手機號碼再重新註冊一次。
     </string>
   <string name="ApplicationPreferencesActivity_error_connecting_to_server">與伺服器的連線發生錯誤！</string>
-  <string name="ApplicationPreferencesActivity_sms_enabled">已開啟手機簡訊接收功能</string>
   <string name="ApplicationPreferencesActivity_touch_to_change_your_default_sms_app">按這裡來變更您預設的手機簡訊APP</string>
-  <string name="ApplicationPreferencesActivity_sms_disabled">已關閉手機簡按這裡來變更您預設的手機簡訊APP訊接收功能</string>
   <string name="ApplicationPreferencesActivity_touch_to_make_textsecure_your_default_sms_app">按這裡將 TextSecure 設為預設的手機簡訊APP</string>
   <!--AppProtectionPreferenceFragment-->
   <!--DraftDatabase-->
@@ -37,19 +35,17 @@
   <string name="AttachmentTypeSelectorAdapter_picture">照片</string>
   <string name="AttachmentTypeSelectorAdapter_video">影片</string>
   <string name="AttachmentTypeSelectorAdapter_audio">音樂</string>
+  <!--ConfirmIdentityDialog-->
+  <string name="ConfirmIdentityDialog_you_may_wish_to_verify_this_contact">您想要對這名連絡人
+進行認證嗎？</string>
   <!--ConversationItem-->
   <string name="ConversationItem_message_size_d_kb">訊息大小: %d KB</string>
   <string name="ConversationItem_expires_s">於: %s 後過期</string>
-  <string name="ConversationItem_error_sending_message">傳送訊息失敗</string>
   <string name="ConversationItem_view_secure_media_question">檢視安全的媒體檔案？</string>
   <string name="ConversationItem_this_media_has_been_stored_in_an_encrypted_database_external_viewer_warning">由於這個媒體檔案已被加密。如果要用外部的媒體瀏覽APP來開啟／檢視它，則需將其解密並儲存至未加密的空間。您確定要這樣做嗎？</string>
   <string name="ConversationItem_error_received_stale_key_exchange_message">錯誤，收到的是過期的金鑰交換訊息。</string>
   <string name="ConversationItem_received_key_exchange_message_click_to_process">接收到金鑰交換訊息，按一下開始更新。</string>
   <string name="ConversationItem_group_action_left">%1$s 已經離開群組。</string>
-  <string name="ConversationItem_click_to_approve_sms">按此撤回手機簡訊</string>
-  <string name="ConversationItem_click_to_approve_mms">按此撤回多媒體簡訊</string>
-  <string name="ConversationItem_click_to_approve_sms_dialog_title">撤回手機簡訊？</string>
-  <string name="ConversationItem_click_to_approve_mms_dialog_title">撤回多媒體簡訊？</string>
   <string name="ConversationItem_click_to_approve_unencrypted_sms_dialog_title">撤回未加密的手機簡訊？</string>
   <string name="ConversationItem_click_to_approve_unencrypted_mms_dialog_title">撤回未加密的多媒體簡訊？</string>
   <string name="ConversationItem_unable_to_open_media">找不到合適的 APP 來開啟媒體檔案。</string>
@@ -66,7 +62,6 @@
   <string name="ConversationActivity_sorry_there_was_an_error_setting_your_attachment">抱歉，無法成功設定您指定的附件檔案</string>
   <string name="ConversationActivity_recipient_is_not_a_valid_sms_or_email_address_exclamation">收件人並不是一個有效的 手機門號 或 email 位址！</string>
   <string name="ConversationActivity_message_is_empty_exclamation">訊息內容是空的！</string>
-  <string name="ConversationActivity_group_conversation_recipients">群組聊天連絡人</string>
   <string name="ConversationActivity_group_conversation">群組聊天</string>
   <string name="ConversationActivity_unnamed_group">未命名的群組</string>
   <string name="ConversationActivity_d_recipients_in_group">有 %d 名成員</string>
@@ -98,6 +93,9 @@
   <string name="ConversationListFragment_deleting_selected_threads">正在刪除已選的對話群組...</string>
   <!--ConversationListItem-->
   <string name="ConversationListItem_key_exchange_message">金鑰交換訊息...</string>
+  <!--CustomDefaultPreference-->
+  <string name="CustomDefaultPreference_none">無</string>
+  <!--DateUtils-->
   <!--ShareActivity-->
   <string name="ShareActivity_share_with">分享給</string>
   <!--ExportFragment-->
@@ -162,6 +160,7 @@
   <string name="ImportFragment_restore_complete">還原完成！</string>
   <!--KeyScanningActivity-->
   <string name="KeyScanningActivity_no_scanned_key_found_exclamation">找不到任何金鑰！</string>
+  <!--MessageDetailsRecipient-->
   <!--MmsDownloader-->
   <string name="MmsDownloader_error_storing_mms">儲存 MMS 多媒體簡訊時有誤！</string>
   <string name="MmsDownloader_error_connecting_to_mms_provider">連線到 MMS 多媒體簡訊伺服器時有誤！</string>
@@ -179,6 +178,7 @@
   <string name="PassphrasePromptActivity_watermark_content_description">TextSecure 圖示</string>
   <string name="PassphrasePromptActivity_ok_button_content_description">確認『自訂密碼』</string>
   <string name="PassphrasePromptActivity_invalid_passphrase_exclamation">無效的『自訂密碼』！</string>
+  <!--RatingManager-->
   <!--ReceiveKeyActivity-->
   <string name="ReceiveKeyActivity_the_signature_on_this_key_exchange_is_different">此次
         金鑰確認所使用的數位簽名與同一名連絡人上次金鑰確認時所用的值並不一致。
@@ -187,10 +187,6 @@
     </string>
   <string name="ReceiveKeyActivity_you_may_wish_to_verify_this_contact">您想要對這名連絡人
 進行認證嗎？</string>
-  <string name="ReceiveKeyActivity_the_signature_on_this_key_exchange_is_trusted_but">此次
-        金鑰確認所用的數位簽名已被成功驗證。但您目前將「自動金鑰交換」的功能
-        給取消了。
-    </string>
   <string name="ReceiveKeyActivity_processing">處理中</string>
   <string name="ReceiveKeyActivity_processing_key_exchange">金鑰交換處理中...</string>
   <!--RegistrationActivity-->
@@ -313,11 +309,9 @@
   <string name="MessageNotifier_error_delivering_message">傳送訊息發生失誤。</string>
   <string name="MessageNotifier_mark_all_as_read">全部標示為已讀</string>
   <string name="MessageNotifier_mark_as_read">標示已讀</string>
+  <string name="MessageNotifier_media_message">媒體訊息</string>
   <!--QuickResponseService-->
   <string name="QuickResponseService_sorry_quick_response_is_not_yet_supported_by_textsecure">抱歉，快速回覆（Quick Response）功能目前 TextSecure 還不支援！</string>
-  <!--auto_initiate_activity-->
-  <string name="auto_initiate_activity__you_have_received_a_message_from_someone_who_supports_textsecure_encrypted_sessions_would_you_like_to_initiate_a_secure_session">您收到一則來自支援 TextSecure 加密連線的新訊息，您想與此新連絡人啟用安全連線？</string>
-  <string name="auto_initiate_activity__initiate_exchange">起始金鑰交換</string>
   <!--change_passphrase_activity-->
   <string name="change_passphrase_activity__old_passphrase">舊的『自訂密碼』:</string>
   <string name="change_passphrase_activity__new_passphrase">新的『自訂密碼』:</string>
@@ -337,8 +331,6 @@
   <string name="contact_selection_recent_activity__no_recent_calls">沒有最近通話。</string>
   <!--conversation_activity-->
   <string name="conversation_activity__type_message_push">傳送 TextSecure 加密訊息</string>
-  <string name="conversation_activity__type_message_sms_secure">傳送加密的手機簡訊</string>
-  <string name="conversation_activity__type_message_mms_secure">傳送加密的 MMS多媒體簡訊</string>
   <string name="conversation_activity__send">送出</string>
   <string name="conversation_activity__remove">移除</string>
   <string name="conversation_activity__window_description">與 %1$s 聊天</string>
@@ -346,7 +338,6 @@
   <string name="conversation_activity__emoji_toggle_description">叫出「表情符號」列表</string>
   <!--conversation_item-->
   <string name="conversation_item__mms_image_description">媒體訊息</string>
-  <string name="conversation_item__play_button_description">播放按鈕</string>
   <string name="conversation_item__secure_message_description">安全的訊息</string>
   <!--conversation_item_sent-->
   <string name="conversation_item_sent__download">下載</string>
@@ -390,6 +381,8 @@
   <string name="import_fragment__import_plaintext_backup">匯入未加密的資料備份</string>
   <string name="import_fragment__import_a_plaintext_backup_file">
 匯入一個未加密的備份資料。 相容於 \"SMSBackup And Restore\"。</string>
+  <!--media_overview_activity-->
+  <!--message_recipients_list_item-->
   <!--MmsPreferencesFragment-->
   <string name="MmsPreferencesFragment__manual_mms_settings_are_required">您的手機需要手動設定 MMS多媒體簡訊。</string>
   <!--GroupUtil-->
@@ -401,16 +394,12 @@
   <!--receive_key_activity-->
   <string name="receive_key_activity__complete">完成</string>
   <!--registration_activity-->
-  <string name="registration_activity__textsecure_can_use_instant_messages_to_avoid_sms_charges_when_communicating_with_other_textsecure_users">
-        註冊是完全免費的，同時可以與其他也使用 TextSecure 的朋友一起提生隱私性。請在此驗證您的手機號碼。
-    </string>
   <string name="registration_activity__your_country">您的國家／區域</string>
   <string name="registration_activity__your_country_code_and_phone_number">您的國碼與
 手機號碼</string>
   <string name="registration_activity__phone_number">手機號碼</string>
   <string name="registration_activity__register">註冊</string>
   <string name="registration_activity__registration_will_transmit_some_contact_information_to_the_server_temporariliy">註冊過程中將會傳送某些您手機上的連絡人資訊到我們的伺服器端。不過它們不會被保存在伺服器上。</string>
-  <string name="registration_activity__skip">略過</string>
   <!--registration_problems-->
   <string name="registration_problems__some_possible_problems_include">某些可能的問題
 包含：</string>
@@ -466,6 +455,7 @@ TextSecure 等候驗證用的手機簡訊已逾時。</string>
   <!--verify_identity_activity-->
   <string name="verify_identity_activity__their_identity_they_read">他們的身份 (請他們唸出)</string>
   <string name="verify_identity_activity__your_identity_you_read">你的驗證碼 (你自己唸出)</string>
+  <!--message_details_header-->
   <!--AndroidManifest.xml-->
   <string name="AndroidManifest__create_passphrase">新增『自訂密碼』</string>
   <string name="AndroidManifest__enter_passphrase">輸入「自訂密碼」</string>
@@ -474,19 +464,16 @@ TextSecure 等候驗證用的手機簡訊已逾時。</string>
   <string name="AndroidManifest__public_identity_key">公鑰／公開金鑰</string>
   <string name="AndroidManifest__change_passphrase">變更『自訂密碼』</string>
   <string name="AndroidManifest__verify_identity">驗證身分</string>
-  <string name="AndroidManifest__complete_key_exchange">金鑰交換完成</string>
   <string name="AndroidManifest__log_submit">送出偵錯紀錄</string>
   <string name="AndroidManifest__media_preview">預覽檔案</string>
   <!--arrays.xml-->
   <string name="arrays__import_export">匯入／匯出</string>
   <string name="arrays__my_identity_key">我的身分識別金鑰</string>
+  <!--plurals.xml-->
   <!--preferences.xml-->
   <string name="preferences__general">一般</string>
-  <string name="preferences__push_sms_category">即時訊息與手機簡訊</string>
   <string name="preferences__pref_all_sms_title">接收所有手機簡訊</string>
   <string name="preferences__pref_all_mms_title">接收所有MMS多媒體簡訊</string>
-  <string name="preferences__use_textsecure_for_viewing_and_storing_all_incoming_text_messages">使用 TextSecure 來檢視與儲存所有接收到的文字簡訊</string>
-  <string name="preferences__use_textsecure_for_viewing_and_storing_all_incoming_multimedia_messages">使用 TextSecure 來檢視與儲存所有接收到的多媒體簡訊</string>
   <string name="preferences__input_settings">輸入設定</string>
   <string name="preferences__enable_enter_key_title">啟用 Enter 鍵</string>
   <string name="preferences__replace_smiley_with_enter_key">把介面上的表情符號按鈕，換成 Enter 按鈕</string>
@@ -497,9 +484,7 @@ TextSecure 等候驗證用的手機簡訊已逾時。</string>
   <string name="preferences__choose_your_contact_entry_from_the_contacts_list">從您的連絡人清單中選擇連絡人。</string>
   <string name="preferences__change_passphrase">變更『自訂密碼』</string>
   <string name="preferences__change_my_passphrase">變更我的『自訂密碼』</string>
-  <string name="preferences__complete_key_exchanges">金鑰交換完成</string>
   <string name="preferences__screen_security">螢幕安全設定</string>
-  <string name="preferences__automatically_complete_key_exchanges_for_new_sessions_or_for_existing_sessions_with_the_same_identity_key">自動完成新連線金鑰交換，或套用目前已存在連線同樣的身分識別金鑰</string>
   <string name="preferences__disable_screen_security_to_allow_screen_shots">停用畫面擷取功能，在對話清單或APP內</string>
   <string name="preferences__forget_passphrase_from_memory_after_some_interval">若閒置太久沒用，讓『自訂密碼』自動幫 TextSecure上鎖</string>
   <string name="preferences__timeout_passphrase">『自訂密碼』上鎖倒數</string>
@@ -536,11 +521,6 @@ TextSecure 等候驗證用的手機簡訊已逾時。</string>
   <string name="preferences__custom">自訂</string>
   <string name="preferences__advanced">進階</string>
   <string name="preferences__override_system_mms_settings">您可自訂 MMS多媒體簡訊設定，並覆蓋過系統的預設值。</string>
-  <string name="preferences__mmsc_url_required">電信業者所提供的 MMSC URL（多媒體簡訊中繼伺服器網址）（必要）:</string>
-  <string name="preferences__mms_proxy_host_optional">MMS多媒體簡訊代理伺服器位址(選擇性):</string>
-  <string name="preferences__mms_proxy_port_optional">MMS多媒體簡訊代理伺服器連接埠(選擇性):</string>
-  <string name="preferences__mmsc_username_optional">MMSC（多媒體簡訊中繼伺服器）使用者名稱（選擇˙性）</string>
-  <string name="preferences__mmsc_password_optional">MMSC（多媒體簡訊中繼伺服器）密碼（選擇˙性）</string>
   <string name="preferences__sms_delivery_reports">手機簡訊傳送狀態報告</string>
   <string name="preferences__request_a_delivery_report_for_each_sms_message_you_send">針對每則手機簡訊都要求回覆傳送報告</string>
   <string name="preferences__automatically_delete_older_messages_once_a_conversation_thread_exceeds_a_specified_length">自動刪除舊的簡訊，當對話群組超過一定長度時</string>
@@ -552,16 +532,7 @@ TextSecure 等候驗證用的手機簡訊已逾時。</string>
   <string name="preferences__theme">主題</string>
   <string name="preferences__default">預設</string>
   <string name="preferences__language">語言選項</string>
-  <string name="preferences__make_default_sms_app">設定為預設的手機簡訊 APP</string>
-  <string name="preferences__make_textsecure_the_default_sms_mms_app">將 TextSecure 設定為您系統預設的 SMS/MMS 應用程式。</string>
-  <string name="preferences__use_data_channel">即時訊息</string>
-  <string name="preferences__use_the_data_channel_for_communication_with_other_textsecure_users">
-可提升隱私性，並且藉由與其他也使用 TextSecure 的使用這透過加密的連線通訊來節約手機簡訊費用。</string>
   <string name="preferences__submit_debug_log">送出偵錯紀錄</string>
-  <string name="preferences__sms_outgoing_push_users">TextSecure 使用者</string>
-  <string name="preferences__sms_outgoing_push_users_description">如果網路斷線，改送出付費的加密手機簡訊</string>
-  <string name="preferences__sms_fallback_non_push_users">非 TextSecure 使用者</string>
-  <string name="preferences__sms_fallback_nobody">無人</string>
   <!--****************************************-->
   <!--menus-->
   <!--****************************************-->
@@ -575,10 +546,6 @@ TextSecure 等候驗證用的手機簡訊已逾時。</string>
   <string name="contact_selection__menu_finished">完成</string>
   <!--refreshing push directory from menu-->
   <string name="push_directory__menu_refresh">更新連絡人清單</string>
-  <!--conversation_button_context-->
-  <string name="conversation_button_context__send_textsecure_message">傳送 TextSecure 加密訊息</string>
-  <string name="conversation_button_context__send_secure_sms">傳送加密的手機簡訊</string>
-  <string name="conversation_button_context__send_secure_mms">傳送加密的 MMS多媒體簡訊</string>
   <!--conversation_callable-->
   <string name="conversation_callable__menu_call">撥出</string>
   <!--conversation_context-->
@@ -589,13 +556,17 @@ TextSecure 等候驗證用的手機簡訊已逾時。</string>
   <string name="conversation_context__menu_resend_message">重送訊息</string>
   <!--conversation_context_image-->
   <string name="conversation_context_image__save_attachment">另存附件檔案</string>
+  <!--conversation_insecure-->
   <!--conversation_insecure_no_push-->
   <string name="conversation_insecure__menu_start_secure_session">起始安全連線</string>
+  <string name="conversation_insecure__security">安全設定</string>
   <!--conversation_list_batch-->
   <string name="conversation_list_batch__menu_delete_selected">刪除已選項目</string>
   <string name="conversation_list_batch__menu_select_all">全選</string>
   <!--conversation_list-->
   <string name="conversation_list__menu_search">搜尋</string>
+  <!--conversation_list_item_view-->
+  <!--conversation_list_fragment-->
   <!--conversation_secure_verified-->
   <string name="conversation_secure_verified__menu_security">安全設定</string>
   <string name="conversation_secure_verified__menu_verify_identity">驗證身分</string>
@@ -635,5 +606,6 @@ TextSecure 等候驗證用的手機簡訊已逾時。</string>
   <string name="trimmer__deleting">刪除中...</string>
   <string name="trimmer__deleting_old_messages">正在刪除舊訊息...</string>
   <string name="trimmer__old_messages_successfully_deleted">已完成刪除舊訊息。</string>
+  <!--transport_selection_list_item-->
   <!--EOF-->
 </resources>

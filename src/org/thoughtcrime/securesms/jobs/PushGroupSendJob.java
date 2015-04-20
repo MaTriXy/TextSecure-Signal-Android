@@ -11,11 +11,13 @@ import org.thoughtcrime.securesms.database.NoSuchMessageException;
 import org.thoughtcrime.securesms.database.documents.NetworkFailure;
 import org.thoughtcrime.securesms.dependencies.InjectableType;
 import org.thoughtcrime.securesms.jobs.requirements.MasterSecretRequirement;
+import org.thoughtcrime.securesms.mms.MediaConstraints;
 import org.thoughtcrime.securesms.mms.PartParser;
 import org.thoughtcrime.securesms.recipients.Recipient;
 import org.thoughtcrime.securesms.recipients.RecipientFactory;
 import org.thoughtcrime.securesms.recipients.RecipientFormattingException;
 import org.thoughtcrime.securesms.recipients.Recipients;
+import org.thoughtcrime.securesms.transport.UndeliverableMessageException;
 import org.thoughtcrime.securesms.util.Base64;
 import org.thoughtcrime.securesms.util.GroupUtil;
 import org.whispersystems.jobqueue.JobParameters;
@@ -72,7 +74,7 @@ public class PushGroupSendJob extends PushSendJob implements InjectableType {
 
   @Override
   public void onSend(MasterSecret masterSecret)
-      throws MmsException, IOException, NoSuchMessageException, RecipientFormattingException
+      throws MmsException, IOException, NoSuchMessageException
   {
     MmsDatabase database = DatabaseFactory.getMmsDatabase(context);
     SendReq     message  = database.getOutgoingMessage(masterSecret, messageId);
@@ -83,7 +85,7 @@ public class PushGroupSendJob extends PushSendJob implements InjectableType {
       database.markAsPush(messageId);
       database.markAsSecure(messageId);
       database.markAsSent(messageId, "push".getBytes(), 0);
-    } catch (InvalidNumberException | RecipientFormattingException e) {
+    } catch (InvalidNumberException | RecipientFormattingException | UndeliverableMessageException e) {
       Log.w(TAG, e);
       database.markAsSentFailed(messageId);
       notifyMediaMessageDeliveryFailed(context, messageId);
@@ -126,8 +128,11 @@ public class PushGroupSendJob extends PushSendJob implements InjectableType {
   }
 
   private void deliver(MasterSecret masterSecret, SendReq message, long filterRecipientId)
-      throws IOException, RecipientFormattingException, InvalidNumberException, EncapsulatedExceptions
+      throws IOException, RecipientFormattingException, InvalidNumberException,
+      EncapsulatedExceptions, UndeliverableMessageException
   {
+    message = getResolvedMessage(masterSecret, message, MediaConstraints.PUSH_CONSTRAINTS, false);
+
     TextSecureMessageSender    messageSender = messageSenderFactory.create(masterSecret);
     byte[]                     groupId       = GroupUtil.getDecodedId(message.getTo()[0].getString());
     Recipients                 recipients    = DatabaseFactory.getGroupDatabase(context).getGroupMembers(groupId, false);
@@ -164,7 +169,7 @@ public class PushGroupSendJob extends PushSendJob implements InjectableType {
     List<TextSecureAddress> addresses = new LinkedList<>();
 
     for (Recipient recipient : recipients.getRecipientsList()) {
-      addresses.add(getPushAddress(recipient));
+      addresses.add(getPushAddress(recipient.getNumber()));
     }
 
     return addresses;
@@ -172,7 +177,7 @@ public class PushGroupSendJob extends PushSendJob implements InjectableType {
 
   private List<TextSecureAddress> getPushAddresses(long filterRecipientId) throws InvalidNumberException {
     List<TextSecureAddress> addresses = new LinkedList<>();
-    addresses.add(getPushAddress(RecipientFactory.getRecipientForId(context, filterRecipientId, false)));
+    addresses.add(getPushAddress(RecipientFactory.getRecipientForId(context, filterRecipientId, false).getNumber()));
     return addresses;
   }
 

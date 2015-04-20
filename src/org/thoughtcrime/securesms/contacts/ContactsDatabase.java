@@ -97,7 +97,11 @@ public class ContactsDatabase {
   }
 
   public Cursor query(String filter, boolean pushOnly) {
-    final boolean      includeAndroidContacts = !pushOnly && TextSecurePreferences.isDirectSmsAllowed(context);
+    // FIXME: This doesn't make sense to me.  You pass in pushOnly, but then
+    // conditionally check to see whether other contacts should be included
+    // in the query method itself? I don't think this method should have any
+    // understanding of that stuff.
+    final boolean      includeAndroidContacts = !pushOnly && TextSecurePreferences.isSmsEnabled(context);
     final Cursor       localCursor            = queryLocalDb(filter);
     final Cursor       androidCursor;
     final MatrixCursor newNumberCursor;
@@ -108,7 +112,7 @@ public class ContactsDatabase {
       androidCursor = null;
     }
 
-    if (includeAndroidContacts && !TextUtils.isEmpty(filter) && NumberUtil.isValidSmsOrEmail(filter)) {
+    if (!TextUtils.isEmpty(filter) && NumberUtil.isValidSmsOrEmail(filter)) {
       newNumberCursor = new MatrixCursor(CONTACTS_PROJECTION, 1);
       newNumberCursor.addRow(new Object[]{-1L, context.getString(R.string.contact_selection_list__unknown_contact),
                              ContactsContract.CommonDataKinds.Phone.TYPE_CUSTOM, "\u21e2", filter, NORMAL_TYPE});
@@ -137,7 +141,7 @@ public class ContactsDatabase {
       baseUri = ContactsContract.CommonDataKinds.Phone.CONTENT_URI;
     }
     Cursor cursor = context.getContentResolver().query(baseUri, ANDROID_PROJECTION, null, null, CONTACT_LIST_SORT);
-    return new TypedCursorWrapper(cursor);
+    return cursor == null ? null : new TypedCursorWrapper(cursor);
   }
 
   private Cursor queryLocalDb(String filter) {

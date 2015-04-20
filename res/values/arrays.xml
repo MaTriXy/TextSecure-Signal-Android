@@ -27,7 +27,7 @@
       <item>Polski</item>
       <item>Português</item>
       <item>Português do Brasil</item>
-      <item>Român</item>
+      <item>Română</item>
       <item>Russian Pусский</item>
       <item>Serbian српски</item>
       <item>Slovenščina</item>
@@ -67,9 +67,9 @@
       <item>es</item>
       <item>fr</item>
       <item>el</item>
-      <item>he</item>
+      <item>iw</item>
       <item>hr</item>
-      <item>id</item>
+      <item>in</item>
       <item>it</item>
       <item>ja</item>
       <item>kn_IN</item>
@@ -143,48 +143,6 @@
     <item>custom</item>
   </string-array>
 
-  <string-array name="transport_selection_entries_text">
-    <item>@string/ConversationActivity_transport_insecure_sms</item>
-    <item>@string/ConversationActivity_transport_secure_sms</item>
-    <item>@string/ConversationActivity_transport_textsecure</item>
-  </string-array>
-
-  <string-array name="transport_selection_entries_media">
-    <item>@string/ConversationActivity_transport_insecure_mms</item>
-    <item>@string/ConversationActivity_transport_secure_mms</item>
-    <item>@string/ConversationActivity_transport_textsecure</item>
-  </string-array>
-
-  <string-array name="transport_selection_entries_compose_text">
-    <item>@string/conversation_activity__type_message_sms_insecure</item>
-    <item>@string/conversation_activity__type_message_sms_secure</item>
-    <item>@string/conversation_activity__type_message_push</item>
-  </string-array>
-
-  <string-array name="transport_selection_entries_compose_media">
-    <item>@string/conversation_activity__type_message_mms_insecure</item>
-    <item>@string/conversation_activity__type_message_mms_secure</item>
-    <item>@string/conversation_activity__type_message_push</item>
-  </string-array>
-
-  <string-array name="transport_selection_values">
-    <item>insecure_sms</item>
-    <item>secure_sms</item>
-    <item>textsecure</item>
-  </string-array>
-
-  <string-array name="transport_selection_icons_light">
-    <item>@drawable/ic_send_sms_insecure</item>
-    <item>@drawable/ic_send_sms_secure</item>
-    <item>@drawable/ic_send_push</item>
-  </string-array>
-
-  <string-array name="transport_selection_icons_dark">
-    <item>@drawable/ic_send_sms_insecure_dark</item>
-    <item>@drawable/ic_send_sms_secure</item>
-    <item>@drawable/ic_send_push</item>
-  </string-array>
-
   <string-array name="pref_repeat_alerts_entries">
       <item>@string/preferences__never</item>
       <item>@string/preferences__one_time</item>
@@ -202,4 +160,15 @@
       <item>5</item>
       <item>10</item>
   </string-array>
+
+  <string-array name="default_or_custom_values" translatable="false">
+      <item>default</item>
+      <item>custom</item>
+  </string-array>
+
+  <string-array name="default_or_custom_entries">
+      <item>@string/arrays__use_default</item>
+      <item>@string/arrays__use_custom</item>
+  </string-array>
+
 </resources>

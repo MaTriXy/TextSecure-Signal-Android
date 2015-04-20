@@ -1,6 +1,5 @@
 package org.thoughtcrime.securesms.preferences;
 
-import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -11,9 +10,9 @@ import android.preference.CheckBoxPreference;
 import android.preference.Preference;
 import android.preference.PreferenceScreen;
 import android.support.v4.preference.PreferenceFragment;
-import android.util.Log;
 import android.widget.Toast;
 
+import com.afollestad.materialdialogs.AlertDialogWrapper;
 import com.doomonafireball.betterpickers.hmspicker.HmsPickerBuilder;
 import com.doomonafireball.betterpickers.hmspicker.HmsPickerDialogFragment;
 
@@ -23,12 +22,12 @@ import org.thoughtcrime.securesms.R;
 import org.thoughtcrime.securesms.crypto.MasterSecret;
 import org.thoughtcrime.securesms.crypto.MasterSecretUtil;
 import org.thoughtcrime.securesms.service.KeyCachingService;
-import org.thoughtcrime.securesms.util.Dialogs;
 import org.thoughtcrime.securesms.util.TextSecurePreferences;
 
 import java.util.concurrent.TimeUnit;
 
 public class AppProtectionPreferenceFragment extends PreferenceFragment {
+  private MasterSecret       masterSecret;
   private CheckBoxPreference disablePassphrase;
 
   @Override
@@ -36,6 +35,7 @@ public class AppProtectionPreferenceFragment extends PreferenceFragment {
     super.onCreate(paramBundle);
     addPreferencesFromResource(R.xml.preferences_app_protection);
 
+    masterSecret      = getArguments().getParcelable("master_secret");
     disablePassphrase = (CheckBoxPreference) this.findPreference("pref_enable_passphrase_temporary");
 
     this.findPreference(TextSecurePreferences.CHANGE_PASSPHRASE_PREF)
@@ -121,18 +121,16 @@ public class AppProtectionPreferenceFragment extends PreferenceFragment {
     @Override
     public boolean onPreferenceChange(final Preference preference, Object newValue) {
       if (((CheckBoxPreference)preference).isChecked()) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        AlertDialogWrapper.Builder builder = new AlertDialogWrapper.Builder(getActivity());
         builder.setTitle(R.string.ApplicationPreferencesActivity_disable_storage_encryption);
         builder.setMessage(R.string.ApplicationPreferencesActivity_warning_this_will_disable_storage_encryption_for_all_messages);
-        builder.setIcon(Dialogs.resolveIcon(getActivity(), R.attr.dialog_alert_icon));
+        builder.setIconAttribute(R.attr.dialog_alert_icon);
         builder.setPositiveButton(R.string.ApplicationPreferencesActivity_disable, new DialogInterface.OnClickListener() {
           @Override
           public void onClick(DialogInterface dialog, int which) {
-            MasterSecret masterSecret = getActivity().getIntent().getParcelableExtra("master_secret");
             MasterSecretUtil.changeMasterSecretPassphrase(getActivity(),
                                                           masterSecret,
                                                           MasterSecretUtil.UNENCRYPTED_PASSPHRASE);
-
 
             TextSecurePreferences.setPasswordDisabled(getActivity(), true);
             ((CheckBoxPreference)preference).setChecked(false);
@@ -153,10 +151,31 @@ public class AppProtectionPreferenceFragment extends PreferenceFragment {
     }
   }
 
-  public static CharSequence getSummary(Context context) {
-    final int onCapsResId  = R.string.ApplicationPreferencesActivity_On;
-    final int offCapsResId = R.string.ApplicationPreferencesActivity_Off;
+  private static CharSequence getPassphraseSummary(Context context) {
+    final int    passphraseResId = R.string.preferences__passphrase_summary;
+    final String onRes           = context.getString(R.string.ApplicationPreferencesActivity_on);
+    final String offRes          = context.getString(R.string.ApplicationPreferencesActivity_off);
 
-    return context.getString(TextSecurePreferences.isPasswordDisabled(context) ? offCapsResId : onCapsResId);
+    if (TextSecurePreferences.isPasswordDisabled(context)) {
+      return context.getString(passphraseResId, offRes);
+    } else {
+      return context.getString(passphraseResId, onRes);
+    }
+  }
+
+  private static CharSequence getScreenSecuritySummary(Context context) {
+    final int    screenSecurityResId = R.string.preferences__screen_security_summary;
+    final String onRes               = context.getString(R.string.ApplicationPreferencesActivity_on);
+    final String offRes              = context.getString(R.string.ApplicationPreferencesActivity_off);
+
+    if (TextSecurePreferences.isScreenSecurityEnabled(context)) {
+      return context.getString(screenSecurityResId, onRes);
+    } else {
+      return context.getString(screenSecurityResId, offRes);
+    }
+  }
+
+  public static CharSequence getSummary(Context context) {
+    return getPassphraseSummary(context) + ", " + getScreenSecuritySummary(context);
   }
 }

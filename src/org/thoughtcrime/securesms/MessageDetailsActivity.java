@@ -18,15 +18,17 @@ package org.thoughtcrime.securesms;
 
 import android.content.Context;
 import android.database.Cursor;
-import android.graphics.Paint;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.LoaderManager.LoaderCallbacks;
 import android.support.v4.content.Loader;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -42,6 +44,8 @@ import org.thoughtcrime.securesms.recipients.Recipient;
 import org.thoughtcrime.securesms.recipients.Recipients;
 import org.thoughtcrime.securesms.util.DateUtils;
 import org.thoughtcrime.securesms.util.DirectoryHelper;
+import org.thoughtcrime.securesms.util.DynamicLanguage;
+import org.thoughtcrime.securesms.util.DynamicTheme;
 import org.thoughtcrime.securesms.util.GroupUtil;
 
 import java.io.IOException;
@@ -51,6 +55,9 @@ import java.text.SimpleDateFormat;
 import java.util.HashSet;
 import java.util.LinkedList;
 
+/**
+ * @author Jake McGinty
+ */
 public class MessageDetailsActivity extends PassphraseRequiredActionBarActivity implements LoaderCallbacks<Cursor> {
   private final static String TAG = MessageDetailsActivity.class.getSimpleName();
 
@@ -73,14 +80,30 @@ public class MessageDetailsActivity extends PassphraseRequiredActionBarActivity 
   private ListView         recipientsList;
   private LayoutInflater   inflater;
 
+  private DynamicTheme     dynamicTheme    = new DynamicTheme();
+  private DynamicLanguage  dynamicLanguage = new DynamicLanguage();
+
   @Override
-  public void onCreate(Bundle bundle) {
-    super.onCreate(bundle);
+  protected void onPreCreate() {
+    dynamicTheme.onCreate(this);
+    dynamicLanguage.onCreate(this);
+  }
+
+  @Override
+  public void onCreate(Bundle bundle, @NonNull MasterSecret masterSecret) {
     setContentView(R.layout.message_details_activity);
 
     initializeResources();
 
+    getSupportActionBar().setDisplayHomeAsUpEnabled(true);
     getSupportLoaderManager().initLoader(0, null, this);
+  }
+
+  @Override
+  protected void onResume() {
+    super.onResume();
+    dynamicTheme.onResume(this);
+    dynamicLanguage.onResume(this);
   }
 
   private void initializeResources() {
@@ -146,7 +169,7 @@ public class MessageDetailsActivity extends PassphraseRequiredActionBarActivity 
       toFromRes = R.string.message_details_header__from;
     }
     toFrom.setText(toFromRes);
-    conversationItem.set(masterSecret, messageRecord, new HashSet<MessageRecord>(), null,
+    conversationItem.set(masterSecret, messageRecord, new HashSet<MessageRecord>(), new NullSelectionListener(),
                          recipients != messageRecord.getRecipients(),
                          DirectoryHelper.isPushDestination(this, recipients));
     recipientsList.setAdapter(new MessageDetailsRecipientAdapter(this, masterSecret, messageRecord,
@@ -197,6 +220,17 @@ public class MessageDetailsActivity extends PassphraseRequiredActionBarActivity 
   @Override
   public void onLoaderReset(Loader<Cursor> loader) {
     recipientsList.setAdapter(null);
+  }
+
+  @Override
+  public boolean onOptionsItemSelected(MenuItem item) {
+    super.onOptionsItemSelected(item);
+
+    switch (item.getItemId()) {
+      case android.R.id.home: finish(); return true;
+    }
+
+    return false;
   }
 
   private class MessageRecipientAsyncTask extends AsyncTask<Void,Void,Recipients> {
@@ -265,6 +299,14 @@ public class MessageDetailsActivity extends PassphraseRequiredActionBarActivity 
         metadataContainer.setVisibility(View.VISIBLE);
       }
     }
+  }
 
+  private static class NullSelectionListener implements ConversationFragment.SelectionClickListener {
+    @Override
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {}
+    @Override
+    public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+      return false;
+    }
   }
 }

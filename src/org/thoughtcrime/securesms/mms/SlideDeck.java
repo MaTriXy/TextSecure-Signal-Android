@@ -17,9 +17,13 @@
 package org.thoughtcrime.securesms.mms;
 
 import android.content.Context;
+import android.graphics.drawable.Drawable;
+import android.util.Pair;
 
+import org.thoughtcrime.securesms.R;
 import org.thoughtcrime.securesms.crypto.MasterSecret;
 import org.thoughtcrime.securesms.dom.smil.parser.SmilXmlSerializer;
+import org.thoughtcrime.securesms.util.ListenableFutureTask;
 import org.thoughtcrime.securesms.util.MediaUtil;
 import org.thoughtcrime.securesms.util.SmilUtil;
 import org.thoughtcrime.securesms.util.Util;
@@ -64,15 +68,6 @@ public class SlideDeck {
       body.addPart(slide.getPart());
     }
 
-    ByteArrayOutputStream out = new ByteArrayOutputStream();
-    SmilXmlSerializer.serialize(SmilUtil.createSmilDocument(this), out);
-    PduPart smilPart = new PduPart();
-    smilPart.setContentId("smil".getBytes());
-    smilPart.setContentLocation("smil.xml".getBytes());
-    smilPart.setContentType(ContentType.APP_SMIL.getBytes());
-    smilPart.setData(out.toByteArray());
-    body.addPart(0, smilPart);
-
     return body;
   }
 
@@ -90,8 +85,15 @@ public class SlideDeck {
         return true;
       }
     }
-
     return false;
   }
 
+  public Slide getThumbnailSlide(Context context) {
+    for (Slide slide : slides) {
+      if (slide.hasImage()) {
+        return slide;
+      }
+    }
+    return null;
+  }
 }

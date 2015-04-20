@@ -5,22 +5,17 @@ import android.util.Log;
 
 import org.thoughtcrime.securesms.ApplicationContext;
 import org.thoughtcrime.securesms.crypto.MasterSecret;
-import org.thoughtcrime.securesms.crypto.storage.TextSecureAxolotlStore;
 import org.thoughtcrime.securesms.database.DatabaseFactory;
 import org.thoughtcrime.securesms.database.MmsDatabase;
 import org.thoughtcrime.securesms.database.NoSuchMessageException;
 import org.thoughtcrime.securesms.dependencies.InjectableType;
 import org.thoughtcrime.securesms.mms.MediaConstraints;
 import org.thoughtcrime.securesms.mms.PartParser;
-import org.thoughtcrime.securesms.recipients.Recipient;
 import org.thoughtcrime.securesms.recipients.RecipientFactory;
-import org.thoughtcrime.securesms.recipients.RecipientFormattingException;
 import org.thoughtcrime.securesms.recipients.Recipients;
 import org.thoughtcrime.securesms.transport.InsecureFallbackApprovalException;
 import org.thoughtcrime.securesms.transport.RetryLaterException;
-import org.thoughtcrime.securesms.transport.SecureFallbackApprovalException;
 import org.thoughtcrime.securesms.transport.UndeliverableMessageException;
-import org.whispersystems.libaxolotl.state.AxolotlStore;
 import org.whispersystems.textsecure.api.TextSecureMessageSender;
 import org.whispersystems.textsecure.api.crypto.UntrustedIdentityException;
 import org.whispersystems.textsecure.api.messages.TextSecureAttachment;
@@ -48,7 +43,7 @@ public class PushMediaSendJob extends PushSendJob implements InjectableType {
   private final long messageId;
 
   public PushMediaSendJob(Context context, long messageId, String destination) {
-    super(context, constructParameters(context, destination, true));
+    super(context, constructParameters(context, destination));
     this.messageId = messageId;
   }
 
@@ -62,25 +57,21 @@ public class PushMediaSendJob extends PushSendJob implements InjectableType {
   @Override
   public void onSend(MasterSecret masterSecret)
       throws RetryLaterException, MmsException, NoSuchMessageException,
-             UndeliverableMessageException, RecipientFormattingException
+             UndeliverableMessageException
   {
     MmsDatabase database = DatabaseFactory.getMmsDatabase(context);
     SendReq     message  = database.getOutgoingMessage(masterSecret, messageId);
 
     try {
-      if (deliver(masterSecret, message)) {
-        database.markAsPush(messageId);
-        database.markAsSecure(messageId);
-        database.markAsSent(messageId, "push".getBytes(), 0);
-      }
+      deliver(masterSecret, message);
+      database.markAsPush(messageId);
+      database.markAsSecure(messageId);
+      database.markAsSent(messageId, "push".getBytes(), 0);
     } catch (InsecureFallbackApprovalException ifae) {
       Log.w(TAG, ifae);
       database.markAsPendingInsecureSmsFallback(messageId);
       notifyMediaMessageDeliveryFailed(context, messageId);
-    } catch (SecureFallbackApprovalException sfae) {
-      Log.w(TAG, sfae);
-      database.markAsPendingSecureSmsFallback(messageId);
-      notifyMediaMessageDeliveryFailed(context, messageId);
+      ApplicationContext.getInstance(context).getJobManager().add(new DirectoryRefreshJob(context));
     } catch (UntrustedIdentityException uie) {
       Log.w(TAG, uie);
       Recipients recipients  = RecipientFactory.getRecipientsFromString(context, uie.getE164Number(), false);
@@ -105,62 +96,32 @@ public class PushMediaSendJob extends PushSendJob implements InjectableType {
   }
 
 
-  private boolean deliver(MasterSecret masterSecret, SendReq message)
-      throws RetryLaterException, SecureFallbackApprovalException,
-             InsecureFallbackApprovalException, UntrustedIdentityException,
+  private void deliver(MasterSecret masterSecret, SendReq message)
+      throws RetryLaterException, InsecureFallbackApprovalException, UntrustedIdentityException,
              UndeliverableMessageException
   {
-    MmsDatabase             database               = DatabaseFactory.getMmsDatabase(context);
-    TextSecureMessageSender messageSender          = messageSenderFactory.create(masterSecret);
-    String                  destination            = message.getTo()[0].getString();
-    boolean                 isSmsFallbackSupported = isSmsFallbackSupported(context, destination, true);
+    TextSecureMessageSender messageSender = messageSenderFactory.create(masterSecret);
+    String                  destination   = message.getTo()[0].getString();
 
     try {
-      prepareMessageMedia(masterSecret, message, MediaConstraints.PUSH_CONSTRAINTS, false);
-      Recipients                 recipients   = RecipientFactory.getRecipientsFromString(context, destination, false);
-      TextSecureAddress          address      = getPushAddress(recipients.getPrimaryRecipient());
+      message = getResolvedMessage(masterSecret, message, MediaConstraints.PUSH_CONSTRAINTS, false);
+
+      TextSecureAddress          address      = getPushAddress(destination);
       List<TextSecureAttachment> attachments  = getAttachments(masterSecret, message);
       String                     body         = PartParser.getMessageText(message.getBody());
-      TextSecureMessage          mediaMessage = new TextSecureMessage(message.getSentTimestamp(), attachments, body);
+      TextSecureMessage          mediaMessage = TextSecureMessage.newBuilder()
+                                                                 .withBody(body)
+                                                                 .withAttachments(attachments)
+                                                                 .withTimestamp(message.getSentTimestamp())
+                                                                 .build();
 
       messageSender.sendMessage(address, mediaMessage);
-      return true;
     } catch (InvalidNumberException | UnregisteredUserException e) {
       Log.w(TAG, e);
-      if (isSmsFallbackSupported) fallbackOrAskApproval(masterSecret, message, destination);
-      else                        database.markAsSentFailed(messageId);
-    } catch (IOException | RecipientFormattingException e) {
+      throw new InsecureFallbackApprovalException(e);
+    } catch (IOException e) {
       Log.w(TAG, e);
-      if (isSmsFallbackSupported) fallbackOrAskApproval(masterSecret, message, destination);
-      else                        throw new RetryLaterException(e);
-    }
-    return false;
-  }
-
-  private void fallbackOrAskApproval(MasterSecret masterSecret, SendReq mediaMessage, String destination)
-      throws SecureFallbackApprovalException, InsecureFallbackApprovalException
-  {
-    try {
-      Recipient    recipient                     = RecipientFactory.getRecipientsFromString(context, destination, false).getPrimaryRecipient();
-      boolean      isSmsFallbackApprovalRequired = isSmsFallbackApprovalRequired(destination, true);
-      AxolotlStore axolotlStore                  = new TextSecureAxolotlStore(context, masterSecret);
-
-      if (!isSmsFallbackApprovalRequired) {
-        Log.w(TAG, "Falling back to MMS");
-        DatabaseFactory.getMmsDatabase(context).markAsForcedSms(mediaMessage.getDatabaseMessageId());
-        ApplicationContext.getInstance(context).getJobManager().add(new MmsSendJob(context, messageId));
-      } else if (!axolotlStore.containsSession(recipient.getRecipientId(), TextSecureAddress.DEFAULT_DEVICE_ID)) {
-        Log.w(TAG, "Marking message as pending insecure SMS fallback");
-        throw new InsecureFallbackApprovalException("Pending user approval for fallback to insecure SMS");
-      } else {
-        Log.w(TAG, "Marking message as pending secure SMS fallback");
-        throw new SecureFallbackApprovalException("Pending user approval for fallback secure to SMS");
-      }
-    } catch (RecipientFormattingException rfe) {
-      Log.w(TAG, rfe);
-      DatabaseFactory.getMmsDatabase(context).markAsSentFailed(messageId);
+      throw new RetryLaterException(e);
     }
   }
-
-
 }

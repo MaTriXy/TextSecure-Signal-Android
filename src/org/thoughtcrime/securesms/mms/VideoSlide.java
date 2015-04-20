@@ -20,21 +20,18 @@ import java.io.IOException;
 
 import org.thoughtcrime.securesms.R;
 import org.thoughtcrime.securesms.crypto.MasterSecret;
-import org.thoughtcrime.securesms.util.SmilUtil;
-import org.thoughtcrime.securesms.util.ThemeUtil;
-import org.w3c.dom.smil.SMILDocument;
-import org.w3c.dom.smil.SMILMediaElement;
-import org.w3c.dom.smil.SMILRegionElement;
+import org.thoughtcrime.securesms.util.ListenableFutureTask;
+import org.thoughtcrime.securesms.util.ResUtil;
 
 import ws.com.google.android.mms.pdu.PduPart;
 import android.content.ContentResolver;
 import android.content.Context;
-import android.content.res.TypedArray;
 import android.database.Cursor;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.util.Pair;
 
 public class VideoSlide extends Slide {
 
@@ -47,8 +44,8 @@ public class VideoSlide extends Slide {
   }
 
   @Override
-  public Drawable getThumbnail(Context context, int width, int height) {
-    return ThemeUtil.resolveIcon(context, R.attr.conversation_icon_attach_video);
+  public ListenableFutureTask<Pair<Drawable,Boolean>> getThumbnail(Context context) {
+    return new ListenableFutureTask<>(new Pair<>(ResUtil.getDrawable(context, R.attr.conversation_icon_attach_video), true));
   }
 
   @Override
@@ -59,23 +56,6 @@ public class VideoSlide extends Slide {
   @Override
   public boolean hasVideo() {
     return true;
-  }
-
-  @Override
-  public SMILRegionElement getSmilRegion(SMILDocument document) {
-    SMILRegionElement region = (SMILRegionElement) document.createElement("region");
-    region.setId("Image");
-    region.setLeft(0);
-    region.setTop(0);
-    region.setWidth(SmilUtil.ROOT_WIDTH);
-    region.setHeight(SmilUtil.ROOT_HEIGHT);
-    region.setFit("meet");
-    return region;
-  }
-
-  @Override
-  public SMILMediaElement getMediaElement(SMILDocument document) {
-    return SmilUtil.createMediaElement("video", document, new String(getPart().getName()));
   }
 
   private static PduPart constructPartFromUri(Context context, Uri uri)

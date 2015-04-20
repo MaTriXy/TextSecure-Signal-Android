@@ -1,7 +1,6 @@
 package org.thoughtcrime.securesms;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -26,6 +25,8 @@ import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.afollestad.materialdialogs.AlertDialogWrapper;
+
 import org.thoughtcrime.securesms.crypto.MasterSecret;
 import org.thoughtcrime.securesms.database.DatabaseFactory;
 import org.thoughtcrime.securesms.database.MmsSmsDatabase;
@@ -36,7 +37,6 @@ import org.thoughtcrime.securesms.mms.Slide;
 import org.thoughtcrime.securesms.recipients.RecipientFactory;
 import org.thoughtcrime.securesms.recipients.Recipients;
 import org.thoughtcrime.securesms.sms.MessageSender;
-import org.thoughtcrime.securesms.util.Dialogs;
 import org.thoughtcrime.securesms.util.DirectoryHelper;
 import org.thoughtcrime.securesms.util.FutureTaskListener;
 import org.thoughtcrime.securesms.util.ProgressDialogAsyncTask;
@@ -52,7 +52,7 @@ public class ConversationFragment extends ListFragment
   private static final String TAG = ConversationFragment.class.getSimpleName();
 
   private final ActionModeCallback     actionModeCallback     = new ActionModeCallback();
-  private final SelectionClickListener selectionClickListener = new SelectionClickListener();
+  private final SelectionClickListener selectionClickListener = new ConversationFragmentSelectionClickListener();
 
   private ConversationFragmentListener listener;
 
@@ -60,6 +60,12 @@ public class ConversationFragment extends ListFragment
   private Recipients   recipients;
   private long         threadId;
   private ActionMode   actionMode;
+
+  @Override
+  public void onCreate(Bundle icicle) {
+    super.onCreate(icicle);
+    this.masterSecret = getArguments().getParcelable("master_secret");
+  }
 
   @Override
   public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle bundle) {
@@ -81,6 +87,15 @@ public class ConversationFragment extends ListFragment
     this.listener = (ConversationFragmentListener)activity;
   }
 
+  @Override
+  public void onResume() {
+    super.onResume();
+
+    if (getListAdapter() != null) {
+      ((ConversationAdapter) getListAdapter()).notifyDataSetChanged();
+    }
+  }
+
   public void onNewIntent() {
     if (actionMode != null) {
       actionMode.finish();
@@ -88,11 +103,13 @@ public class ConversationFragment extends ListFragment
 
     initializeResources();
     initializeListAdapter();
-    getLoaderManager().restartLoader(0, null, this);
+
+    if (threadId == -1) {
+      getLoaderManager().restartLoader(0, null, this);
+    }
   }
 
   private void initializeResources() {
-    this.masterSecret = this.getActivity().getIntent().getParcelableExtra("master_secret");
     this.recipients   = RecipientFactory.getRecipientsForIds(getActivity(), getActivity().getIntent().getLongArrayExtra("recipients"), true);
     this.threadId     = this.getActivity().getIntent().getLongExtra("thread_id", -1);
   }
@@ -103,7 +120,7 @@ public class ConversationFragment extends ListFragment
                                                   (!this.recipients.isSingleRecipient()) || this.recipients.isGroupRecipient(),
                                                   DirectoryHelper.isPushDestination(getActivity(), this.recipients)));
       getListView().setRecyclerListener((ConversationAdapter)getListAdapter());
-      getLoaderManager().initLoader(0, null, this);
+      getLoaderManager().restartLoader(0, null, this);
     }
   }
 
@@ -113,12 +130,9 @@ public class ConversationFragment extends ListFragment
   }
 
   private void setCorrectMenuVisibility(Menu menu) {
-    ConversationAdapter adapter        = (ConversationAdapter) getListAdapter();
     List<MessageRecord> messageRecords = getSelectedMessageRecords();
 
     if (actionMode != null && messageRecords.size() == 0) {
-      adapter.getBatchSelected().clear();
-      adapter.notifyDataSetChanged();
       actionMode.finish();
       return;
     }
@@ -156,9 +170,11 @@ public class ConversationFragment extends ListFragment
 
   public void reload(Recipients recipients, long threadId) {
     this.recipients = recipients;
-    this.threadId   = threadId;
 
-    initializeListAdapter();
+    if (this.threadId != threadId) {
+      this.threadId = threadId;
+      initializeListAdapter();
+    }
   }
 
   public void scrollToBottom() {
@@ -181,9 +197,9 @@ public class ConversationFragment extends ListFragment
   }
 
   private void handleDeleteMessages(final List<MessageRecord> messageRecords) {
-    AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+    AlertDialogWrapper.Builder builder = new AlertDialogWrapper.Builder(getActivity());
     builder.setTitle(R.string.ConversationFragment_confirm_message_delete);
-    builder.setIcon(Dialogs.resolveIcon(getActivity(), R.attr.dialog_alert_icon));
+    builder.setIconAttribute(R.attr.dialog_alert_icon);
     builder.setCancelable(true);
     builder.setMessage(R.string.ConversationFragment_are_you_sure_you_want_to_permanently_delete_all_selected_messages);
     builder.setPositiveButton(R.string.yes, new DialogInterface.OnClickListener() {
@@ -223,8 +239,7 @@ public class ConversationFragment extends ListFragment
 
   private void handleForwardMessage(MessageRecord message) {
     Intent composeIntent = new Intent(getActivity(), ShareActivity.class);
-    composeIntent.putExtra(ConversationActivity.DRAFT_TEXT_EXTRA, message.getDisplayBody().toString());
-    composeIntent.putExtra(ShareActivity.MASTER_SECRET_EXTRA, masterSecret);
+    composeIntent.putExtra(Intent.EXTRA_TEXT, message.getDisplayBody().toString());
     startActivity(composeIntent);
   }
 
@@ -268,20 +283,27 @@ public class ConversationFragment extends ListFragment
 
   @Override
   public void onLoadFinished(Loader<Cursor> arg0, Cursor cursor) {
-    ((CursorAdapter)getListAdapter()).changeCursor(cursor);
+    if (getListAdapter() != null) {
+      ((CursorAdapter) getListAdapter()).changeCursor(cursor);
+    }
   }
 
   @Override
   public void onLoaderReset(Loader<Cursor> arg0) {
-    ((CursorAdapter)getListAdapter()).changeCursor(null);
+    if (getListAdapter() != null) {
+      ((CursorAdapter) getListAdapter()).changeCursor(null);
+    }
   }
 
   public interface ConversationFragmentListener {
     public void setComposeText(String text);
   }
 
-  public class SelectionClickListener
-      implements AdapterView.OnItemLongClickListener, AdapterView.OnItemClickListener
+  public interface SelectionClickListener extends
+      AdapterView.OnItemLongClickListener, AdapterView.OnItemClickListener {}
+
+  private class ConversationFragmentSelectionClickListener
+      implements SelectionClickListener
   {
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {

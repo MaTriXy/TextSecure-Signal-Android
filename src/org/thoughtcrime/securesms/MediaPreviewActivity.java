@@ -26,6 +26,7 @@ import android.os.AsyncTask;
 import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -57,16 +58,14 @@ import uk.co.senab.photoview.PhotoViewAttacher;
 public class MediaPreviewActivity extends PassphraseRequiredActionBarActivity implements RecipientModifiedListener {
   private final static String TAG = MediaPreviewActivity.class.getSimpleName();
 
-  public final static String MASTER_SECRET_EXTRA = "master_secret";
-  public final static String RECIPIENT_EXTRA     = "recipient";
-  public final static String DATE_EXTRA          = "date";
+  public static final String RECIPIENT_EXTRA = "recipient";
+  public static final String DATE_EXTRA      = "date";
 
   private final DynamicLanguage dynamicLanguage = new DynamicLanguage();
 
   private MasterSecret masterSecret;
   private boolean      paused;
 
-  private View              loadingView;
   private TextView          errorText;
   private Bitmap            bitmap;
   private ImageView         image;
@@ -77,11 +76,11 @@ public class MediaPreviewActivity extends PassphraseRequiredActionBarActivity im
   private long              date;
 
   @Override
-  protected void onCreate(Bundle bundle) {
+  protected void onCreate(Bundle bundle, @NonNull MasterSecret masterSecret) {
+    this.masterSecret = masterSecret;
     this.setTheme(R.style.TextSecure_DarkTheme);
     dynamicLanguage.onCreate(this);
 
-    super.onCreate(bundle);
     setFullscreenIfPossible();
     getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
                          WindowManager.LayoutParams.FLAG_FULLSCREEN);
@@ -146,7 +145,6 @@ public class MediaPreviewActivity extends PassphraseRequiredActionBarActivity im
   }
 
   private void initializeViews() {
-    loadingView   =             findViewById(R.id.loading_indicator);
     errorText     = (TextView)  findViewById(R.id.error);
     image         = (ImageView) findViewById(R.id.image);
     imageAttacher = new PhotoViewAttacher(image);
@@ -155,7 +153,6 @@ public class MediaPreviewActivity extends PassphraseRequiredActionBarActivity im
   private void initializeResources() {
     final long recipientId = getIntent().getLongExtra(RECIPIENT_EXTRA, -1);
 
-    masterSecret = getIntent().getParcelableExtra(MASTER_SECRET_EXTRA);
     mediaUri     = getIntent().getData();
     mediaType    = getIntent().getType();
     date         = getIntent().getLongExtra(DATE_EXTRA, -1);
@@ -207,18 +204,12 @@ public class MediaPreviewActivity extends PassphraseRequiredActionBarActivity im
       }
 
       @Override
-      protected void onPreExecute() {
-        loadingView.setVisibility(View.VISIBLE);
-      }
-
-      @Override
       protected void onPostExecute(Bitmap bitmap) {
         if (paused) {
           if (bitmap != null) bitmap.recycle();
           return;
         }
 
-        loadingView.setVisibility(View.GONE);
         if (bitmap == null) {
           errorText.setText(R.string.MediaPreviewActivity_cant_display);
           errorText.setVisibility(View.VISIBLE);

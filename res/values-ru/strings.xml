@@ -23,19 +23,14 @@
 Это отключит push-сообщения, отменив вашу регистрацию на сервере.
 Чтобы в будущем включить push-сообщения, вам нужно будет зарегистрироваться вновь.</string>
   <string name="ApplicationPreferencesActivity_error_connecting_to_server">Ошибка при соединении с сервером!</string>
-  <string name="ApplicationPreferencesActivity_sms_enabled">Входящие SMS включены</string>
+  <string name="ApplicationPreferencesActivity_sms_enabled">SMS доступна</string>
   <string name="ApplicationPreferencesActivity_touch_to_change_your_default_sms_app">Нажмите для выбора SMS-приложения по умолчанию</string>
-  <string name="ApplicationPreferencesActivity_sms_disabled">Входящие SMS отключены</string>
+  <string name="ApplicationPreferencesActivity_sms_disabled">SMS отключена</string>
   <string name="ApplicationPreferencesActivity_touch_to_make_textsecure_your_default_sms_app">Нажмите, чтобы использовать TextSecure для всех SMS</string>
   <string name="ApplicationPreferencesActivity_on">включено</string>
   <string name="ApplicationPreferencesActivity_On">Включено</string>
   <string name="ApplicationPreferencesActivity_off">выключено</string>
   <string name="ApplicationPreferencesActivity_Off">Выключено</string>
-  <string name="ApplicationPreferencesActivity_partial">частично</string>
-  <string name="ApplicationPreferencesActivity_sms">SMS</string>
-  <string name="ApplicationPreferencesActivity_mms">MMS</string>
-  <string name="ApplicationPreferencesActivity_incoming_sms">Входящее</string>
-  <string name="ApplicationPreferencesActivity_outgoing_sms">исходящее</string>
   <!--AppProtectionPreferenceFragment-->
   <string name="AppProtectionPreferenceFragment_minutes">%d минут</string>
   <!--DraftDatabase-->
@@ -49,23 +44,24 @@
   <string name="AttachmentTypeSelectorAdapter_video">Видео</string>
   <string name="AttachmentTypeSelectorAdapter_audio">Аудио</string>
   <string name="AttachmentTypeSelectorAdapter_contact">Контактная информация</string>
+  <!--ConfirmIdentityDialog-->
+  <string name="ConfirmIdentityDialog_the_signature_on_this_key_exchange_is_different">Ключ идентификации для %1$s изменился. Это могло произойти потому что кто-то пытается перехватить Вашу беседу, либо же %2$s просто переустановил TextSecure и теперь у него новый ключ идентификации. </string>
+  <string name="ConfirmIdentityDialog_you_may_wish_to_verify_this_contact">Вы можете хотеть проверить 
+этот контакт.</string>
   <!--ConversationItem-->
   <string name="ConversationItem_message_size_d_kb">Размер сообщения: %d Kб</string>
   <string name="ConversationItem_expires_s">Истекает: %s</string>
-  <string name="ConversationItem_error_sending_message">Ошибка при отправке сообщения</string>
+  <string name="ConversationItem_error_not_delivered">Не доставлено</string>
   <string name="ConversationItem_view_secure_media_question">Просмотреть защищенный медиа-файл?</string>
   <string name="ConversationItem_this_media_has_been_stored_in_an_encrypted_database_external_viewer_warning">Этот медиа-файл хранится в зашифрованной базе данных. Чтобы просмотреть его через стороннее приложение, необходимо будет его временно расшифровать и записать на диск. Вы уверены, что хотите это сделать?</string>
   <string name="ConversationItem_error_received_stale_key_exchange_message">Ошибка: получено устаревшее сообщение обмена ключами.</string>
   <string name="ConversationItem_received_key_exchange_message_click_to_process">Получено сообщение обмена ключами. Нажмите, чтобы его обработать.</string>
   <string name="ConversationItem_group_action_left">%1$s покинул группу.</string>
-  <string name="ConversationItem_click_to_approve_sms">Отправить как SMS</string>
-  <string name="ConversationItem_click_to_approve_mms">Отправить как MMS</string>
+  <string name="ConversationItem_click_for_details">Нажмите для подробностей</string>
   <string name="ConversationItem_click_to_approve_unencrypted">Отправить незащищённым</string>
-  <string name="ConversationItem_click_to_approve_sms_dialog_title">Отправить как SMS?</string>
-  <string name="ConversationItem_click_to_approve_mms_dialog_title">Отправить как MMS?</string>
   <string name="ConversationItem_click_to_approve_unencrypted_sms_dialog_title">Отправить как незашифрованное SMS?</string>
   <string name="ConversationItem_click_to_approve_unencrypted_mms_dialog_title">Отправить как незашифрованное MMS?</string>
-  <string name="ConversationItem_click_to_approve_unencrypted_dialog_message">Это сообщение <b>не будет</b> зашифровано, так как не удалось установить защищённый сеанс.\n\nОтправить сообщение незащищённым?</string>
+  <string name="ConversationItem_click_to_approve_unencrypted_dialog_message">Это сообщение <b>не будет</b> зашифровано, потому что получатель больше не является пользователем TextSecure.\n\nОтправить небезопасное сообщение?</string>
   <string name="ConversationItem_unable_to_open_media">Не найдено приложение, которое может открыть этот медиа-файл.</string>
   <!--ConversationActivity-->
   <string name="ConversationActivity_initiate_secure_session_question">Начать защищённый сеанс?</string>
@@ -82,7 +78,6 @@
   <string name="ConversationActivity_sorry_the_selected_audio_exceeds_message_size_restrictions">Извините, выбранное аудио превышает ограничение на размер сообщения (%1$sКБ).</string>
   <string name="ConversationActivity_recipient_is_not_a_valid_sms_or_email_address_exclamation">Адрес получателя не является ни номером телефона, ни адресом электронной почты.</string>
   <string name="ConversationActivity_message_is_empty_exclamation">Пустое сообщение!</string>
-  <string name="ConversationActivity_group_conversation_recipients">Участники группы</string>
   <string name="ConversationActivity_group_conversation">Групповой разговор</string>
   <string name="ConversationActivity_unnamed_group">Группа без названия</string>
   <string name="ConversationActivity_d_recipients_in_group">%d участников</string>
@@ -95,11 +90,8 @@
   <string name="ConversationActivity_are_you_sure_you_want_to_leave_this_group">Вы уверены, что хотите покинуть эту группу?</string>
   <string name="ConversationActivity_transport_insecure_sms">Незащищённое SMS</string>
   <string name="ConversationActivity_transport_insecure_mms">Незащищённое MMS</string>
-  <string name="ConversationActivity_transport_secure_sms">Защищённое SMS</string>
-  <string name="ConversationActivity_transport_secure_mms">Защищённое MMS</string>
   <string name="ConversationActivity_transport_textsecure">TextSecure</string>
   <string name="ConversationActivity_get_with_it">Получить: %s</string>
-  <string name="ConversationActivity_install_textsecure">Установить TextSecure: %s</string>
   <string name="ConversationActivity_error_leaving_group">Ошибка при выходе из группы...</string>
   <!--ConversationFragment-->
   <string name="ConversationFragment_message_details">Подробности</string>
@@ -114,8 +106,8 @@
   <string name="ConversationFragment_unable_to_write_to_sd_card_exclamation">Невозможно произвести запись на SD-карту!</string>
   <string name="ConversationFragment_saving_attachment">Сохранение вложения</string>
   <string name="ConversationFragment_saving_attachment_to_sd_card">Сохраняем вложение на SD-карту...</string>
-  <string name="ConversationFragment_pending">ОЖИДАЮЩЕЕ</string>
-  <string name="ConversationFragment_push">PUSH</string>
+  <string name="ConversationFragment_pending">В ожидании...</string>
+  <string name="ConversationFragment_push">Данные (TextSecure)</string>
   <string name="ConversationFragment_mms">MMS</string>
   <string name="ConversationFragment_sms">SMS</string>
   <string name="ConversationFragment_deleting">Удаление...</string>
@@ -127,6 +119,12 @@
   <string name="ConversationListFragment_deleting_selected_threads">Удаляем выбранные разговоры...</string>
   <!--ConversationListItem-->
   <string name="ConversationListItem_key_exchange_message">Сообщениe обмена ключами...</string>
+  <!--CustomDefaultPreference-->
+  <string name="CustomDefaultPreference_using_custom">Использовать пользовательское: %s</string>
+  <string name="CustomDefaultPreference_using_default">Использовать по-умолчанию: %s</string>
+  <string name="CustomDefaultPreference_none">Нет</string>
+  <!--DateUtils-->
+  <string name="DateUtils_now">Только что</string>
   <!--ShareActivity-->
   <string name="ShareActivity_share_with">Поделиться с</string>
   <!--ExportFragment-->
@@ -188,6 +186,9 @@
   <string name="KeyScanningActivity_no_scanned_key_found_exclamation">При сканировании ключ не обнаружен!</string>
   <string name="KeyScanningActivity_install_barcode_Scanner">Установить сканер штрих-кодов?</string>
   <string name="KeyScanningActivity_this_application_requires_barcode_scanner_would_you_like_to_install_it">Приложению TextSecure необходим сканер штрих-кодов, чтобы читать QR-коды.</string>
+  <!--MessageDetailsRecipient-->
+  <string name="MessageDetailsRecipient_failed_to_send">Отправка не удалась</string>
+  <string name="MessageDetailsRecipient_new_identity">Новая личность</string>
   <!--MmsDownloader-->
   <string name="MmsDownloader_error_storing_mms">Ошибка при сохранении MMS!</string>
   <string name="MmsDownloader_error_connecting_to_mms_provider">Ошибка подключения к провайдеру MMS...</string>
@@ -206,6 +207,10 @@
   <string name="DeviceProvisioningActivity_cancel">Отмена</string>
   <string name="DeviceProvisioningActivity_continue">Продолжить</string>
   <string name="DeviceProvisioningActivity_title">Привязать это устройство?</string>
+  <string name="DeviceProvisioningActivity_content_intro">Это будет возможно</string>
+  <string name="DeviceProvisioningActivity_content_bullets">
+- Читать все Ваши сообщения
+\n - Отправить сообщения от вашего имени</string>
   <string name="DeviceProvisioningActivity_content_progress_title">Добавление устройства...</string>
   <string name="DeviceProvisioningActivity_content_progress_content">Добавление нового устройства...</string>
   <string name="DeviceProvisioningActivity_content_progress_success">Устройство добавлено!</string>
@@ -217,10 +222,10 @@
   <string name="PassphrasePromptActivity_watermark_content_description">Иконка TextSecure</string>
   <string name="PassphrasePromptActivity_ok_button_content_description">Подтвердить парольную фразу</string>
   <string name="PassphrasePromptActivity_invalid_passphrase_exclamation">Неверная парольная фраза!</string>
+  <!--RatingManager-->
   <!--ReceiveKeyActivity-->
   <string name="ReceiveKeyActivity_the_signature_on_this_key_exchange_is_different">Подпись, полученная сейчас при обмене ключами, отличается от той, которой собеседник подписывался ранее. Это может означать, что кто-то пытается перехватить вашу переписку или что ваш собеседник переустановил TextSecure, и теперь у него новый личный ключ.</string>
   <string name="ReceiveKeyActivity_you_may_wish_to_verify_this_contact">Возможно, вы захотите перепроверить этого собеседника.</string>
-  <string name="ReceiveKeyActivity_the_signature_on_this_key_exchange_is_trusted_but">Подпись в этом обмене ключами является доверенной, но вы отключили в настройках автоматическое выполнение обменов.</string>
   <string name="ReceiveKeyActivity_processing">Обработка</string>
   <string name="ReceiveKeyActivity_processing_key_exchange">Обрабатываем обмен ключами...</string>
   <!--RegistrationActivity-->
@@ -336,17 +341,16 @@
   <string name="MessageNotifier_d_new_messages">Новых сообщений: %d</string>
   <string name="MessageNotifier_most_recent_from_s">Последнее — от %s</string>
   <string name="MessageNotifier_encrypted_message">Зашифрованное сообщение...</string>
+  <string name="MessageNotifier_media_message_with_text">MMS-сообщение: %s</string>
   <string name="MessageNotifier_no_subject">(Нет темы)</string>
   <string name="MessageNotifier_message_delivery_failed">Сбой доставки сообщения.</string>
   <string name="MessageNotifier_failed_to_deliver_message">Не удалось доставить сообщение.</string>
   <string name="MessageNotifier_error_delivering_message">Ошибка при доставке сообщения.</string>
   <string name="MessageNotifier_mark_all_as_read">Отметить все как прочитанные</string>
   <string name="MessageNotifier_mark_as_read">Отметить как прочитанное</string>
+  <string name="MessageNotifier_media_message">MMS-сообщение</string>
   <!--QuickResponseService-->
   <string name="QuickResponseService_sorry_quick_response_is_not_yet_supported_by_textsecure">Извините, TextSecure пока не поддерживает быстрые ответы.</string>
-  <!--auto_initiate_activity-->
-  <string name="auto_initiate_activity__you_have_received_a_message_from_someone_who_supports_textsecure_encrypted_sessions_would_you_like_to_initiate_a_secure_session">Вы получили сообщение от собеседника, поддерживающего зашифрованное общение при помощи TextSecure. Хотите начать защищённый сеанс?</string>
-  <string name="auto_initiate_activity__initiate_exchange">Начать обмен</string>
   <!--change_passphrase_activity-->
   <string name="change_passphrase_activity__old_passphrase">СТАРАЯ ПАРОЛЬНАЯ ФРАЗА:</string>
   <string name="change_passphrase_activity__new_passphrase">НОВАЯ ПАРОЛЬНАЯ ФРАЗА:</string>
@@ -366,18 +370,17 @@
   <string name="contact_selection_recent_activity__no_recent_calls">Нет недавних звонков.</string>
   <!--conversation_activity-->
   <string name="conversation_activity__type_message_push">Отправить сообщение TextSecure</string>
-  <string name="conversation_activity__type_message_sms_secure">Отправить защищённое SMS</string>
   <string name="conversation_activity__type_message_sms_insecure">Отправить незащищённое SMS</string>
-  <string name="conversation_activity__type_message_mms_secure">Отправить защищённое MMS</string>
   <string name="conversation_activity__type_message_mms_insecure">Отправить незащищённое MMS</string>
   <string name="conversation_activity__send">Отправить</string>
   <string name="conversation_activity__remove">Удалить</string>
   <string name="conversation_activity__window_description">Разговор с %1$s</string>
   <string name="conversation_activity__compose_description">Написание сообщения</string>
   <string name="conversation_activity__emoji_toggle_description">Клавиатура смайликов</string>
+  <string name="conversation_activity__attachment_thumbnail">Миниатюра вложения</string>
   <!--conversation_item-->
+  <string name="conversation_item__mms_downloading_description">Загрузка MMS-сообщения</string>
   <string name="conversation_item__mms_image_description">MMS-сообщение</string>
-  <string name="conversation_item__play_button_description">Воспроизведение</string>
   <string name="conversation_item__secure_message_description">Защищённое сообщение</string>
   <!--conversation_item_sent-->
   <string name="conversation_item_sent__download">Скачать</string>
@@ -420,6 +423,11 @@
   <string name="import_fragment__import_plaintext_backup">Импорт простой резервной копии</string>
   <string name="import_fragment__import_a_plaintext_backup_file">
 Импортировать из простой резервной копии. Совместимо с приложением «SMSBackup And Restore».</string>
+  <!--media_overview_activity-->
+  <string name="media_overview_activity__no_images">Изображений нет</string>
+  <!--message_recipients_list_item-->
+  <string name="message_recipients_list_item__verify">ПРОВЕРИТЬ</string>
+  <string name="message_recipients_list_item__resend">ПЕРЕОТПРАВИТЬ</string>
   <!--MmsPreferencesFragment-->
   <string name="MmsPreferencesFragment__manual_mms_settings_are_required">Для вашего телефона необходимо настроить MMS вручную.</string>
   <string name="MmsPreferencesFragment__enabled">Включено</string>
@@ -440,14 +448,13 @@
   <string name="receive_key_activity__complete">Выполнить</string>
   <!--registration_activity-->
   <string name="registration_activity__textsecure_can_use_instant_messages_to_avoid_sms_charges_when_communicating_with_other_textsecure_users">
-Регистрация бесплатна и повышает безопасность при общении с другими пользователями TextSecure. Пожалуйста, подтвердите ваш номер телефона.</string>
+Проверьте свой номер телефона, для того, чтобы подключиться к TextSecure</string>
   <string name="registration_activity__your_country">ВАША СТРАНА</string>
   <string name="registration_activity__your_country_code_and_phone_number">КОД ВАШЕЙ СТРАНЫ
 И НОМЕР ТЕЛЕФОНА</string>
   <string name="registration_activity__phone_number">НОМЕР ТЕЛЕФОНА</string>
   <string name="registration_activity__register">Зарегистрироваться</string>
   <string name="registration_activity__registration_will_transmit_some_contact_information_to_the_server_temporariliy">При регистрации на сервер передаётся некоторая контактная информация. Она не будет на нём сохранена.</string>
-  <string name="registration_activity__skip">Пропустить</string>
   <!--registration_problems-->
   <string name="registration_problems__some_possible_problems_include">Возможные причины:</string>
   <string name="registration_problems__sms_interceptors">Обработчики SMS</string>
@@ -499,12 +506,23 @@ SMS-подтверждения...
 по SMS не удалось.
 </string>
   <string name="registration_progress_activity__generating_keys">Генерируем ключи...</string>
+  <string name="registration_progress_activity__alert">Предупреждение</string>
+  <string name="registration_progress_activity__telephone">Телефон</string>
+  <string name="registration_progress_activity__check">Проверка</string>
   <!--recipients_panel-->
   <string name="recipients_panel__to"><small>Введите имя или номер</small></string>
   <string name="recipients_panel__add_member">Добавить участника</string>
   <!--verify_identity_activity-->
   <string name="verify_identity_activity__their_identity_they_read">Личность собеседника (он читает):</string>
   <string name="verify_identity_activity__your_identity_you_read">Ваша личность (вы читаете):</string>
+  <!--message_details_header-->
+  <string name="message_details_header__issues_need_your_attention">Некоторые проблемы требуют Вашего внимания.</string>
+  <string name="message_details_header__sent">Отправлено</string>
+  <string name="message_details_header__received">Получено</string>
+  <string name="message_details_header__via">Через</string>
+  <string name="message_details_header__to">Кому:</string>
+  <string name="message_details_header__from">От кого:</string>
+  <string name="message_details_header__with">С:</string>
   <!--AndroidManifest.xml-->
   <string name="AndroidManifest__create_passphrase">Создать парольную фразу</string>
   <string name="AndroidManifest__enter_passphrase">Введите парольную фразу</string>
@@ -513,20 +531,31 @@ SMS-подтверждения...
   <string name="AndroidManifest__public_identity_key">Публичный ключ</string>
   <string name="AndroidManifest__change_passphrase">Изменить парольную фразу</string>
   <string name="AndroidManifest__verify_identity">Подтвердить личность</string>
-  <string name="AndroidManifest__complete_key_exchange">Выполнить обмен ключами</string>
   <string name="AndroidManifest__log_submit">Отправлять отладочные логи</string>
   <string name="AndroidManifest__media_preview">Предпросмотр</string>
+  <string name="AndroidManifest__media_overview">Все изображения</string>
+  <string name="AndroidManifest__media_overview_named">Все изображения с %1$s</string>
   <!--arrays.xml-->
   <string name="arrays__import_export">Импорт / экспорт</string>
   <string name="arrays__my_identity_key">Мой личный ключ</string>
+  <string name="arrays__use_default">Использовать по-умолчанию</string>
+  <string name="arrays__use_custom">Использовать пользовательское</string>
+  <!--plurals.xml-->
+  <plurals name="minutes_ago">
+    <item quantity="one">%d минута</item>
+    <item quantity="few">%d минут</item>
+    <item quantity="other">%d минут</item>
+  </plurals>
+  <plurals name="hours_ago">
+    <item quantity="one">%d час</item>
+    <item quantity="few">%d часа</item>
+    <item quantity="other">%d часов</item>
+  </plurals>
   <!--preferences.xml-->
   <string name="preferences__general">Общие</string>
   <string name="preferences__sms_mms">SMS и MMS</string>
-  <string name="preferences__push_sms_category">Push и SMS</string>
   <string name="preferences__pref_all_sms_title">Получать все SMS</string>
   <string name="preferences__pref_all_mms_title">Получать все MMS</string>
-  <string name="preferences__use_textsecure_for_viewing_and_storing_all_incoming_text_messages">Использовать TextSecure для просмотра и хранения всех входящих текстовых сообщений</string>
-  <string name="preferences__use_textsecure_for_viewing_and_storing_all_incoming_multimedia_messages">Использовать TextSecure для просмотра и хранения всех входящих мультимедийных сообщений</string>
   <string name="preferences__input_settings">Настройки ввода</string>
   <string name="preferences__enable_enter_key_title">Включить клавишу «Ввод»</string>
   <string name="preferences__replace_smiley_with_enter_key">Заменить клавишу смайликов на «Ввод»</string>
@@ -537,11 +566,11 @@ SMS-подтверждения...
   <string name="preferences__choose_your_contact_entry_from_the_contacts_list">Выберите себя из списка контактов.</string>
   <string name="preferences__change_passphrase">Изменить парольную фразу</string>
   <string name="preferences__change_my_passphrase">Изменить мою парольную фразу</string>
-  <string name="preferences__complete_key_exchanges">Выполнять обмены ключами</string>
   <string name="preferences__enable_passphrase">Включить парольную фразу</string>
+  <string name="preferences__passphrase_summary">Парольная фраза %s</string>
   <string name="preferences__enable_local_encryption_of_messages_and_keys">Включить шифрование при хранении сообщений и ключей</string>
   <string name="preferences__screen_security">Защита экрана</string>
-  <string name="preferences__automatically_complete_key_exchanges_for_new_sessions_or_for_existing_sessions_with_the_same_identity_key">Автоматически выполнять обмен ключами в новых сеансах, а также в существующих сеансах с не изменившимся личным ключом</string>
+  <string name="preferences__screen_security_summary">Безопасность экрана %s</string>
   <string name="preferences__disable_screen_security_to_allow_screen_shots">Блокировать снимки экрана внутри приложения</string>
   <string name="preferences__forget_passphrase_from_memory_after_some_interval">Стирать из памяти парольную фразу через некоторое время</string>
   <string name="preferences__timeout_passphrase">Забывать парольную фразу</string>
@@ -561,6 +590,13 @@ SMS-подтверждения...
   <string name="preferences__change_notification_sound">Изменить мелодию уведомления</string>
   <string name="preferences__inthread_notifications">Уведомления при разговоре</string>
   <string name="preferences__play_inthread_notifications">Проигрывать мелодию уведомления даже во время активной переписки</string>
+  <string name="preferences__repeat_alerts">Повторять сигналы</string>
+  <string name="preferences__never">Никогда</string>
+  <string name="preferences__one_time">Один раз</string>
+  <string name="preferences__two_times">Два раза</string>
+  <string name="preferences__three_times">Три раза</string>
+  <string name="preferences__five_times">Пять раз</string>
+  <string name="preferences__ten_times">Десять раз</string>
   <string name="preferences__vibrate">Вибрация</string>
   <string name="preferences__also_vibrate_when_notified">Вибрировать при уведомлении</string>
   <string name="preferences__minutes">мин.</string>
@@ -582,11 +618,11 @@ SMS-подтверждения...
   <string name="preferences__advanced_mms_access_point_names">Ручные настройки MMS</string>
   <string name="preferences__enable_manual_mms">Использовать ручные настройки MMS</string>
   <string name="preferences__override_system_mms_settings">Использовать вместо системных настроек MMS указанную ниже информацию.</string>
-  <string name="preferences__mmsc_url_required">Адрес MMS-центра (обязательно)</string>
-  <string name="preferences__mms_proxy_host_optional">Адрес прокси для MMS (необязательно)</string>
-  <string name="preferences__mms_proxy_port_optional">Порт прокси для MMS (необязательно)</string>
-  <string name="preferences__mmsc_username_optional">Имя пользователя MMSC (необязательно)</string>
-  <string name="preferences__mmsc_password_optional">Пароль MMSC (необязательно)</string>
+  <string name="preferences__mmsc_url">MMSC URL</string>
+  <string name="preferences__mms_proxy_host">MMS Прокси Хост</string>
+  <string name="preferences__mms_proxy_port">MMS Прокси Порт</string>
+  <string name="preferences__mmsc_username">MMSC Имя Пользователя</string>
+  <string name="preferences__mmsc_password">MMSC Пароль</string>
   <string name="preferences__sms_delivery_reports">Отчеты о доставке SMS</string>
   <string name="preferences__request_a_delivery_report_for_each_sms_message_you_send">Запрашивать отчёт о доставке каждого отправленного SMS-сообщения</string>
   <string name="preferences__automatically_delete_older_messages_once_a_conversation_thread_exceeds_a_specified_length">Автоматически удалять старые сообщения, когда длина разговора превышает заданную</string>
@@ -598,23 +634,11 @@ SMS-подтверждения...
   <string name="preferences__dark_theme">Тёмная</string>
   <string name="preferences__appearance">Внешний вид</string>
   <string name="preferences__theme">Тема</string>
+  <string name="preferences__theme_summary">Тема %s</string>
   <string name="preferences__default">По умолчанию</string>
   <string name="preferences__language">Язык (Language)</string>
-  <string name="preferences__make_default_sms_app">SMS-приложение по умолчанию</string>
-  <string name="preferences__make_textsecure_the_default_sms_mms_app">Сделать TextSecure приложением по умолчанию для SMS и MMS.</string>
-  <string name="preferences__use_data_channel">Push-сообщения</string>
-  <string name="preferences__use_the_data_channel_for_communication_with_other_textsecure_users">
-Повысить безопасность и снизить расходы на SMS, используя передачу данных при общении с другими пользователями TextSecure</string>
-  <string name="preferences__sms_fallback">Исходящие SMS/MMS</string>
+  <string name="preferences__language_summary">Язык %s</string>
   <string name="preferences__submit_debug_log">Отправлять лог отладки</string>
-  <string name="preferences__sms_outgoing_push_users">Пользователи TextSecure</string>
-  <string name="preferences__sms_fallback_push_users_ask">сначала спросить</string>
-  <string name="preferences__sms_fallback_push_users_no_mms">кроме MMS</string>
-  <string name="preferences__sms_outgoing_push_users_description">Отправлять защищённые SMS, если нет интернета</string>
-  <string name="preferences__sms_fallback_ask_before_sending_sms_mms">Спросить перед отправкой SMS/MMS</string>
-  <string name="preferences__sms_fallback_never_send_mms">Никогда не отправлять MMS</string>
-  <string name="preferences__sms_fallback_non_push_users">Пользователи без TextSecure</string>
-  <string name="preferences__sms_fallback_nobody">Никто</string>
   <string name="preferences__support_wifi_calling">Режим совместимости с WiFi-звонками</string>
   <string name="preferences__enable_if_your_device_supports_sms_mms_delivery_over_wifi">Включите, если ваше устройство отправляет и принимает SMS/MMS через WiFi (и если WiFi-звонки включены)</string>
   <!--****************************************-->
@@ -630,12 +654,6 @@ SMS-подтверждения...
   <string name="contact_selection__menu_finished">Закончено</string>
   <!--refreshing push directory from menu-->
   <string name="push_directory__menu_refresh">Обновить контакты</string>
-  <!--conversation_button_context-->
-  <string name="conversation_button_context__send_textsecure_message">Отправить сообщение TextSecure</string>
-  <string name="conversation_button_context__send_secure_sms">Отправить защищённое SMS</string>
-  <string name="conversation_button_context__send_insecure_sms">Отправить незащищенное SMS</string>
-  <string name="conversation_button_context__send_secure_mms">Отправить защищённое MMS</string>
-  <string name="conversation_button_context__send_insecure_mms">Отправить незащищённое MMS</string>
   <!--conversation_callable-->
   <string name="conversation_callable__menu_call">Звонок</string>
   <!--conversation_context-->
@@ -646,13 +664,21 @@ SMS-подтверждения...
   <string name="conversation_context__menu_resend_message">Отправить заново</string>
   <!--conversation_context_image-->
   <string name="conversation_context_image__save_attachment">Сохранить вложение</string>
+  <!--conversation_insecure-->
+  <string name="conversation_insecure__invite">Пригласить</string>
   <!--conversation_insecure_no_push-->
   <string name="conversation_insecure__menu_start_secure_session">Начать защищённый сеанс</string>
+  <string name="conversation_insecure__security">Безопасность</string>
   <!--conversation_list_batch-->
   <string name="conversation_list_batch__menu_delete_selected">Удалить выбранное</string>
   <string name="conversation_list_batch__menu_select_all">Выбрать все</string>
   <!--conversation_list-->
   <string name="conversation_list__menu_search">Поиск</string>
+  <!--conversation_list_item_view-->
+  <string name="conversation_list_item_view__contact_photo_image">Фотография контакта</string>
+  <string name="conversation_list_item_view__error_alert">Предупреждение об ошибке</string>
+  <!--conversation_list_fragment-->
+  <string name="conversation_list_fragment__fab_content_description">Новый разговор</string>
   <!--conversation_secure_verified-->
   <string name="conversation_secure_verified__menu_security">Безопасность</string>
   <string name="conversation_secure_verified__menu_verify_identity">Подтвердить личность</string>
@@ -662,6 +688,7 @@ SMS-подтверждения...
   <string name="conversation__menu_update_group">Обновить группу</string>
   <string name="conversation__menu_leave_group">Покинуть группу</string>
   <string name="conversation__menu_delete_thread">Удалить разговор</string>
+  <string name="conversation__menu_view_media">Все изображения</string>
   <!--conversation_callable-->
   <string name="conversation_add_to_contacts__menu_add_to_contacts">Добавить в контакты</string>
   <!--conversation_group_options-->
@@ -700,5 +727,7 @@ SMS-подтверждения...
   <string name="trimmer__deleting">Удаляем...</string>
   <string name="trimmer__deleting_old_messages">Удаляем старые сообщения</string>
   <string name="trimmer__old_messages_successfully_deleted">Старые сообщения успешно удалены</string>
+  <!--transport_selection_list_item-->
+  <string name="transport_selection_list_item__transport_icon">Иконка транспорта</string>
   <!--EOF-->
 </resources>

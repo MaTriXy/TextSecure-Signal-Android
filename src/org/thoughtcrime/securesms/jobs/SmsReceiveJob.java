@@ -12,8 +12,8 @@ import org.thoughtcrime.securesms.database.EncryptingSmsDatabase;
 import org.thoughtcrime.securesms.notifications.MessageNotifier;
 import org.thoughtcrime.securesms.protocol.WirePrefix;
 import org.thoughtcrime.securesms.service.KeyCachingService;
+import org.thoughtcrime.securesms.sms.IncomingEncryptedMessage;
 import org.thoughtcrime.securesms.sms.IncomingTextMessage;
-import org.thoughtcrime.securesms.sms.MultipartSmsMessageHandler;
 import org.whispersystems.jobqueue.JobParameters;
 import org.whispersystems.libaxolotl.util.guava.Optional;
 
@@ -24,13 +24,12 @@ public class SmsReceiveJob extends ContextJob {
 
   private static final String TAG = SmsReceiveJob.class.getSimpleName();
 
-  private static MultipartSmsMessageHandler multipartMessageHandler = new MultipartSmsMessageHandler();
-
   private final Object[] pdus;
 
   public SmsReceiveJob(Context context, Object[] pdus) {
     super(context, JobParameters.newBuilder()
                                 .withPersistence()
+                                .withWakeLock(true)
                                 .create());
 
     this.pdus = pdus;
@@ -67,18 +66,15 @@ public class SmsReceiveJob extends ContextJob {
 
     if (message.isSecureMessage()) {
       messageAndThreadId = database.insertMessageInbox((MasterSecret)null, message);
+      database.markAsLegacyVersion(messageAndThreadId.first);
     } else if (masterSecret == null) {
       messageAndThreadId = database.insertMessageInbox(MasterSecretUtil.getAsymmetricMasterSecret(context, null), message);
-    } else {
-      messageAndThreadId = database.insertMessageInbox(masterSecret, message);
-    }
 
-    if (masterSecret == null || message.isSecureMessage() || message.isKeyExchange() || message.isEndSession()) {
       ApplicationContext.getInstance(context)
                         .getJobManager()
                         .add(new SmsDecryptJob(context, messageAndThreadId.first));
     } else {
-      MessageNotifier.updateNotification(context, masterSecret, messageAndThreadId.second);
+      messageAndThreadId = database.insertMessageInbox(masterSecret, message);
     }
 
     return messageAndThreadId;
@@ -102,7 +98,7 @@ public class SmsReceiveJob extends ContextJob {
         WirePrefix.isPreKeyBundle(message.getMessageBody())     ||
         WirePrefix.isEndSession(message.getMessageBody()))
     {
-      return Optional.fromNullable(multipartMessageHandler.processPotentialMultipartMessage(message));
+      return Optional.<IncomingTextMessage>of(new IncomingEncryptedMessage(message, message.getMessageBody()));
     } else {
       return Optional.of(message);
     }

@@ -20,20 +20,16 @@ import java.io.IOException;
 
 import org.thoughtcrime.securesms.R;
 import org.thoughtcrime.securesms.crypto.MasterSecret;
-import org.thoughtcrime.securesms.util.SmilUtil;
-import org.thoughtcrime.securesms.util.ThemeUtil;
-import org.w3c.dom.smil.SMILDocument;
-import org.w3c.dom.smil.SMILMediaElement;
-import org.w3c.dom.smil.SMILRegionElement;
-import org.w3c.dom.smil.SMILRegionMediaElement;
+import org.thoughtcrime.securesms.util.ListenableFutureTask;
+import org.thoughtcrime.securesms.util.ResUtil;
 
 import ws.com.google.android.mms.pdu.PduPart;
 import android.content.Context;
-import android.content.res.TypedArray;
 import android.database.Cursor;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.provider.MediaStore.Audio;
+import android.util.Pair;
 
 public class AudioSlide extends Slide {
 
@@ -56,18 +52,8 @@ public class AudioSlide extends Slide {
   }
 
   @Override
-  public SMILRegionElement getSmilRegion(SMILDocument document) {
-    return null;
-  }
-
-  @Override
-  public SMILMediaElement getMediaElement(SMILDocument document) {
-    return SmilUtil.createMediaElement("audio", document, new String(getPart().getName()));
-  }
-
-  @Override
-  public Drawable getThumbnail(Context context, int maxWidth, int maxHeight) {
-    return ThemeUtil.resolveIcon(context, R.attr.conversation_icon_attach_audio);
+  public ListenableFutureTask<Pair<Drawable,Boolean>> getThumbnail(Context context) {
+    return new ListenableFutureTask<>(new Pair<>(ResUtil.getDrawable(context, R.attr.conversation_icon_attach_audio), true));
   }
 
   public static PduPart constructPartFromUri(Context context, Uri uri) throws IOException, MediaTooLargeException {
