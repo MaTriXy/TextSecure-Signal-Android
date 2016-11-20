@@ -16,69 +16,67 @@
  */
 package org.thoughtcrime.securesms.mms;
 
-import java.io.IOException;
+import android.content.Context;
+import android.content.res.Resources.Theme;
+import android.net.Uri;
+import android.support.annotation.DrawableRes;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import org.thoughtcrime.securesms.R;
-import org.thoughtcrime.securesms.crypto.MasterSecret;
-import org.thoughtcrime.securesms.util.ListenableFutureTask;
+import org.thoughtcrime.securesms.attachments.Attachment;
+import org.thoughtcrime.securesms.attachments.UriAttachment;
+import org.thoughtcrime.securesms.database.AttachmentDatabase;
 import org.thoughtcrime.securesms.util.ResUtil;
 
+import java.io.IOException;
+
+import ws.com.google.android.mms.ContentType;
 import ws.com.google.android.mms.pdu.PduPart;
-import android.content.Context;
-import android.database.Cursor;
-import android.graphics.drawable.Drawable;
-import android.net.Uri;
-import android.provider.MediaStore.Audio;
-import android.util.Pair;
 
 public class AudioSlide extends Slide {
 
-  public AudioSlide(Context context, Uri uri) throws IOException, MediaTooLargeException {
-    super(context, constructPartFromUri(context, uri));
+  public AudioSlide(Context context, Uri uri, long dataSize) {
+    super(context, constructAttachmentFromUri(context, uri, ContentType.AUDIO_UNSPECIFIED, dataSize));
   }
 
-  public AudioSlide(Context context, MasterSecret masterSecret, PduPart part) {
-    super(context, masterSecret, part);
+  public AudioSlide(Context context, Uri uri, long dataSize, String contentType) {
+    super(context,  new UriAttachment(uri, contentType, AttachmentDatabase.TRANSFER_PROGRESS_STARTED, dataSize));
+  }
+
+  public AudioSlide(Context context, Attachment attachment) {
+    super(context, attachment);
   }
 
   @Override
-    public boolean hasImage() {
+  @Nullable
+  public Uri getThumbnailUri() {
+    return null;
+  }
+
+  @Override
+  public boolean hasPlaceholder() {
     return true;
   }
 
   @Override
-    public boolean hasAudio() {
+  public boolean hasImage() {
     return true;
   }
 
   @Override
-  public ListenableFutureTask<Pair<Drawable,Boolean>> getThumbnail(Context context) {
-    return new ListenableFutureTask<>(new Pair<>(ResUtil.getDrawable(context, R.attr.conversation_icon_attach_audio), true));
+  public boolean hasAudio() {
+    return true;
   }
 
-  public static PduPart constructPartFromUri(Context context, Uri uri) throws IOException, MediaTooLargeException {
-    PduPart part = new PduPart();
+  @NonNull
+  @Override
+  public String getContentDescription() {
+    return context.getString(R.string.Slide_audio);
+  }
 
-    assertMediaSize(context, uri);
-
-    Cursor cursor = null;
-
-    try {
-      cursor = context.getContentResolver().query(uri, new String[]{Audio.Media.MIME_TYPE}, null, null, null);
-
-      if (cursor != null && cursor.moveToFirst())
-        part.setContentType(cursor.getString(0).getBytes());
-      else
-        throw new IOException("Unable to query content type.");
-    } finally {
-      if (cursor != null)
-        cursor.close();
-    } 
-
-    part.setDataUri(uri);
-    part.setContentId((System.currentTimeMillis()+"").getBytes());
-    part.setName(("Audio" + System.currentTimeMillis()).getBytes());
-
-    return part;
+  @Override
+  public @DrawableRes int getPlaceholderRes(Theme theme) {
+    return ResUtil.getDrawableRes(theme, R.attr.conversation_icon_attach_audio);
   }
 }

@@ -37,27 +37,32 @@ import org.apache.http.impl.client.LaxRedirectStrategy;
 import org.apache.http.impl.conn.BasicHttpClientConnectionManager;
 import org.apache.http.message.BasicHeader;
 import org.thoughtcrime.securesms.database.ApnDatabase;
-import org.thoughtcrime.securesms.util.TelephonyUtil;
 import org.thoughtcrime.securesms.util.Conversions;
+import org.thoughtcrime.securesms.util.ServiceUtil;
+import org.thoughtcrime.securesms.util.TelephonyUtil;
 import org.thoughtcrime.securesms.util.TextSecurePreferences;
 import org.thoughtcrime.securesms.util.Util;
-import org.whispersystems.libaxolotl.util.guava.Optional;
+import org.whispersystems.libsignal.util.guava.Optional;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.URL;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 @SuppressWarnings("deprecation")
 public abstract class LegacyMmsConnection {
 
   public static final String USER_AGENT = "Android-Mms/2.0";
 
-  private static final String TAG = "MmsCommunication";
+  private static final String TAG = LegacyMmsConnection.class.getSimpleName();
 
   protected final Context context;
   protected final Apn     apn;
@@ -84,10 +89,23 @@ public abstract class LegacyMmsConnection {
     }
   }
 
-  protected boolean isCdmaDevice() {
-    return ((TelephonyManager)context.getSystemService(Context.TELEPHONY_SERVICE)).getPhoneType() == TelephonyManager.PHONE_TYPE_CDMA;
+  protected boolean isDirectConnect() {
+    // We think Sprint supports direct connection over wifi/data, but not Verizon
+    Set<String> sprintMccMncs = new HashSet<String>() {{
+      add("312530");
+      add("311880");
+      add("311870");
+      add("311490");
+      add("310120");
+      add("316010");
+      add("312190");
+    }};
+
+    return ServiceUtil.getTelephonyManager(context).getPhoneType() == TelephonyManager.PHONE_TYPE_CDMA &&
+           sprintMccMncs.contains(TelephonyUtil.getMccMnc(context));
   }
 
+  @SuppressWarnings("TryWithIdenticalCatches")
   protected static boolean checkRouteToHost(Context context, String host, boolean usingMmsRadio)
       throws IOException
   {
@@ -105,16 +123,29 @@ public abstract class LegacyMmsConnection {
     }
 
     byte[] ipAddressBytes = inetAddress.getAddress();
-    if (ipAddressBytes == null || ipAddressBytes.length != 4) {
-      Log.w(TAG, "returning vacuous success since android.net package doesn't support IPv6");
+    if (ipAddressBytes == null) {
+      Log.w(TAG, "resolved IP address bytes are null, returning true to attempt a connection anyway.");
       return true;
     }
 
     Log.w(TAG, "Checking route to address: " + host + ", " + inetAddress.getHostAddress());
     ConnectivityManager manager = (ConnectivityManager)context.getSystemService(Context.CONNECTIVITY_SERVICE);
-    int     ipAddress           = Conversions.byteArrayToIntLittleEndian(ipAddressBytes, 0);
-    boolean routeToHostObtained = manager.requestRouteToHost(MmsRadio.TYPE_MOBILE_MMS, ipAddress);
-    Log.w(TAG, "requestRouteToHost result: " + routeToHostObtained);
+    try {
+      final Method  requestRouteMethod  = manager.getClass().getMethod("requestRouteToHostAddress", Integer.TYPE, InetAddress.class);
+      final boolean routeToHostObtained = (Boolean) requestRouteMethod.invoke(manager, MmsRadio.TYPE_MOBILE_MMS, inetAddress);
+      Log.w(TAG, "requestRouteToHostAddress(" + inetAddress + ") -> " + routeToHostObtained);
+      return routeToHostObtained;
+    } catch (NoSuchMethodException nsme) {
+      Log.w(TAG, nsme);
+    } catch (IllegalAccessException iae) {
+      Log.w(TAG, iae);
+    } catch (InvocationTargetException ite) {
+      Log.w(TAG, ite);
+    }
+
+    final int     ipAddress           = Conversions.byteArrayToIntLittleEndian(ipAddressBytes, 0);
+    final boolean routeToHostObtained = manager.requestRouteToHost(MmsRadio.TYPE_MOBILE_MMS, ipAddress);
+    Log.w(TAG, "requestRouteToHost(" + ipAddress + ") -> " + routeToHostObtained);
     return routeToHostObtained;
   }
 
@@ -168,6 +199,10 @@ public abstract class LegacyMmsConnection {
       if (response.getStatusLine().getStatusCode() == 200) {
         return parseResponse(response.getEntity().getContent());
       }
+    } catch (NullPointerException npe) {
+      // TODO determine root cause
+      // see: https://github.com/WhisperSystems/Signal-Android/issues/4379
+      throw new IOException(npe);
     } finally {
       if (response != null) response.close();
       if (client != null)   client.close();
@@ -177,7 +212,8 @@ public abstract class LegacyMmsConnection {
   }
 
   protected List<Header> getBaseHeaders() {
-    final String number = TelephonyUtil.getManager(context).getLine1Number();
+    final String                number    = TelephonyUtil.getManager(context).getLine1Number(); ;
+
     return new LinkedList<Header>() {{
       add(new BasicHeader("Accept", "*/*, application/vnd.wap.mms-message, application/vnd.wap.sic"));
       add(new BasicHeader("x-wap-profile", "http://www.google.com/oha/rdf/ua-profile-kila.xml"));
@@ -188,8 +224,6 @@ public abstract class LegacyMmsConnection {
         add(new BasicHeader("X-MDN", number));
       }
     }};
-
-
   }
 
   public static class Apn {

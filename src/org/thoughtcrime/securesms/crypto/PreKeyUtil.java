@@ -25,16 +25,16 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import org.thoughtcrime.securesms.crypto.storage.TextSecurePreKeyStore;
 import org.thoughtcrime.securesms.util.JsonUtils;
 import org.thoughtcrime.securesms.util.Util;
-import org.whispersystems.libaxolotl.IdentityKeyPair;
-import org.whispersystems.libaxolotl.InvalidKeyException;
-import org.whispersystems.libaxolotl.InvalidKeyIdException;
-import org.whispersystems.libaxolotl.ecc.Curve;
-import org.whispersystems.libaxolotl.ecc.ECKeyPair;
-import org.whispersystems.libaxolotl.state.PreKeyRecord;
-import org.whispersystems.libaxolotl.state.PreKeyStore;
-import org.whispersystems.libaxolotl.state.SignedPreKeyRecord;
-import org.whispersystems.libaxolotl.state.SignedPreKeyStore;
-import org.whispersystems.libaxolotl.util.Medium;
+import org.whispersystems.libsignal.IdentityKeyPair;
+import org.whispersystems.libsignal.InvalidKeyException;
+import org.whispersystems.libsignal.InvalidKeyIdException;
+import org.whispersystems.libsignal.ecc.Curve;
+import org.whispersystems.libsignal.ecc.ECKeyPair;
+import org.whispersystems.libsignal.state.PreKeyRecord;
+import org.whispersystems.libsignal.state.PreKeyStore;
+import org.whispersystems.libsignal.state.SignedPreKeyRecord;
+import org.whispersystems.libsignal.state.SignedPreKeyStore;
+import org.whispersystems.libsignal.util.Medium;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -48,8 +48,8 @@ public class PreKeyUtil {
 
   public static final int BATCH_SIZE = 100;
 
-  public static List<PreKeyRecord> generatePreKeys(Context context, MasterSecret masterSecret) {
-    PreKeyStore        preKeyStore    = new TextSecurePreKeyStore(context, masterSecret);
+  public static List<PreKeyRecord> generatePreKeys(Context context) {
+    PreKeyStore        preKeyStore    = new TextSecurePreKeyStore(context);
     List<PreKeyRecord> records        = new LinkedList<>();
     int                preKeyIdOffset = getNextPreKeyId(context);
 
@@ -66,11 +66,10 @@ public class PreKeyUtil {
     return records;
   }
 
-  public static SignedPreKeyRecord generateSignedPreKey(Context context, MasterSecret masterSecret,
-                                                        IdentityKeyPair identityKeyPair)
+  public static SignedPreKeyRecord generateSignedPreKey(Context context, IdentityKeyPair identityKeyPair)
   {
     try {
-      SignedPreKeyStore  signedPreKeyStore = new TextSecurePreKeyStore(context, masterSecret);
+      SignedPreKeyStore  signedPreKeyStore = new TextSecurePreKeyStore(context);
       int                signedPreKeyId    = getNextSignedPreKeyId(context);
       ECKeyPair          keyPair           = Curve.generateKeyPair();
       byte[]             signature         = Curve.calculateSignature(identityKeyPair.getPrivateKey(), keyPair.getPublicKey().serialize());
@@ -85,8 +84,8 @@ public class PreKeyUtil {
     }
   }
 
-  public static PreKeyRecord generateLastResortKey(Context context, MasterSecret masterSecret) {
-    PreKeyStore preKeyStore = new TextSecurePreKeyStore(context, masterSecret);
+  public static PreKeyRecord generateLastResortKey(Context context) {
+    PreKeyStore preKeyStore = new TextSecurePreKeyStore(context);
 
     if (preKeyStore.containsPreKey(Medium.MAX_VALUE)) {
       try {

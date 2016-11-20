@@ -10,18 +10,23 @@
                 android:icon="?pref_ic_notifications"/>
 
     <Preference android:key="preference_category_app_protection"
-                android:title="@string/preferences__app_protection"
+                android:title="@string/preferences__privacy"
                 android:icon="?pref_ic_app_protection"/>
 
     <Preference android:key="preference_category_appearance"
                 android:title="@string/preferences__appearance"
                 android:icon="?pref_ic_appearance"/>
 
-    <Preference android:key="preference_category_storage"
-                android:title="@string/preferences__delete_old_messages"
-                android:icon="?pref_ic_storage"/>
+    <Preference android:key="preference_category_chats"
+                android:title="@string/preferences__chats"
+                android:icon="?pref_ic_chats"/>
+
+    <Preference android:key="preference_category_devices"
+                android:title="@string/preferences__linked_devices"
+                android:icon="?pref_ic_devices"/>
 
     <Preference android:key="preference_category_advanced"
                 android:title="@string/preferences__advanced"
                 android:icon="?pref_ic_advanced"/>
+
 </PreferenceScreen>

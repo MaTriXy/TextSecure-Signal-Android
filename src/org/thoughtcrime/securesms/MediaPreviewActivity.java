@@ -19,10 +19,7 @@ package org.thoughtcrime.securesms;
 import android.annotation.TargetApi;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.graphics.Bitmap;
 import android.net.Uri;
-import android.opengl.GLES20;
-import android.os.AsyncTask;
 import android.os.Build.VERSION;
 import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
@@ -33,24 +30,17 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.Toast;
 
+import org.thoughtcrime.securesms.components.ZoomingImageView;
 import org.thoughtcrime.securesms.crypto.MasterSecret;
 import org.thoughtcrime.securesms.recipients.Recipient;
 import org.thoughtcrime.securesms.recipients.Recipient.RecipientModifiedListener;
 import org.thoughtcrime.securesms.recipients.RecipientFactory;
-import org.thoughtcrime.securesms.util.BitmapDecodingException;
-import org.thoughtcrime.securesms.util.BitmapUtil;
 import org.thoughtcrime.securesms.util.DateUtils;
 import org.thoughtcrime.securesms.util.DynamicLanguage;
 import org.thoughtcrime.securesms.util.SaveAttachmentTask;
 import org.thoughtcrime.securesms.util.SaveAttachmentTask.Attachment;
-
-import java.io.IOException;
-
-import uk.co.senab.photoview.PhotoViewAttacher;
 
 /**
  * Activity for displaying media attachments in-app
@@ -64,12 +54,8 @@ public class MediaPreviewActivity extends PassphraseRequiredActionBarActivity im
   private final DynamicLanguage dynamicLanguage = new DynamicLanguage();
 
   private MasterSecret masterSecret;
-  private boolean      paused;
 
-  private TextView          errorText;
-  private Bitmap            bitmap;
-  private ImageView         image;
-  private PhotoViewAttacher imageAttacher;
+  private ZoomingImageView  image;
   private Uri               mediaUri;
   private String            mediaType;
   private Recipient         recipient;
@@ -114,14 +100,14 @@ public class MediaPreviewActivity extends PassphraseRequiredActionBarActivity im
     } else {
       relativeTimeSpan = null;
     }
-    getSupportActionBar().setTitle(recipient == null ? getString(R.string.MediaPreviewActivity_you) : recipient.toShortString());
+    getSupportActionBar().setTitle(recipient == null ? getString(R.string.MediaPreviewActivity_you)
+                                                     : recipient.toShortString());
     getSupportActionBar().setSubtitle(relativeTimeSpan);
   }
 
   @Override
   public void onResume() {
     super.onResume();
-    paused = false;
     dynamicLanguage.onResume(this);
     if (recipient != null) recipient.addListener(this);
     initializeMedia();
@@ -130,7 +116,6 @@ public class MediaPreviewActivity extends PassphraseRequiredActionBarActivity im
   @Override
   public void onPause() {
     super.onPause();
-    paused = true;
     if (recipient != null) recipient.removeListener(this);
     cleanupMedia();
   }
@@ -145,9 +130,7 @@ public class MediaPreviewActivity extends PassphraseRequiredActionBarActivity im
   }
 
   private void initializeViews() {
-    errorText     = (TextView)  findViewById(R.id.error);
-    image         = (ImageView) findViewById(R.id.image);
-    imageAttacher = new PhotoViewAttacher(image);
+    image = (ZoomingImageView)findViewById(R.id.image);
   }
 
   private void initializeResources() {
@@ -155,7 +138,7 @@ public class MediaPreviewActivity extends PassphraseRequiredActionBarActivity im
 
     mediaUri     = getIntent().getData();
     mediaType    = getIntent().getType();
-    date         = getIntent().getLongExtra(DATE_EXTRA, -1);
+    date         = getIntent().getLongExtra(DATE_EXTRA, System.currentTimeMillis());
 
     if (recipientId > -1) {
       recipient = RecipientFactory.getRecipientForId(this, recipientId, true);
@@ -175,52 +158,19 @@ public class MediaPreviewActivity extends PassphraseRequiredActionBarActivity im
     Log.w(TAG, "Loading Part URI: " + mediaUri);
 
     if (mediaType != null && mediaType.startsWith("image/")) {
-      displayImage();
+      image.setImageUri(masterSecret, mediaUri);
     }
   }
 
   private void cleanupMedia() {
     image.setImageDrawable(null);
-    if (bitmap != null) {
-      bitmap.recycle();
-      bitmap = null;
-    }
   }
 
-  private void displayImage() {
-    new AsyncTask<Void,Void,Bitmap>() {
-      @Override
-      protected Bitmap doInBackground(Void... params) {
-        try {
-          int[] maxTextureSizeParams = new int[1];
-          GLES20.glGetIntegerv(GLES20.GL_MAX_TEXTURE_SIZE, maxTextureSizeParams, 0);
-          int maxTextureSize = Math.max(maxTextureSizeParams[0], 2048);
-          Log.w(TAG, "reported GL_MAX_TEXTURE_SIZE: " + maxTextureSize);
-          return BitmapUtil.createScaledBitmap(MediaPreviewActivity.this, masterSecret, mediaUri,
-                                               maxTextureSize, maxTextureSize);
-        } catch (IOException | BitmapDecodingException e) {
-          return null;
-        }
-      }
-
-      @Override
-      protected void onPostExecute(Bitmap bitmap) {
-        if (paused) {
-          if (bitmap != null) bitmap.recycle();
-          return;
-        }
-
-        if (bitmap == null) {
-          errorText.setText(R.string.MediaPreviewActivity_cant_display);
-          errorText.setVisibility(View.VISIBLE);
-        } else {
-          MediaPreviewActivity.this.bitmap = bitmap;
-          image.setImageBitmap(bitmap);
-          image.setVisibility(View.VISIBLE);
-          imageAttacher.update();
-        }
-      }
-    }.execute();
+  private void forward() {
+    Intent composeIntent = new Intent(this, ShareActivity.class);
+    composeIntent.putExtra(Intent.EXTRA_STREAM, mediaUri);
+    composeIntent.setType(mediaType);
+    startActivity(composeIntent);
   }
 
   private void saveToDisk() {
@@ -249,8 +199,9 @@ public class MediaPreviewActivity extends PassphraseRequiredActionBarActivity im
     super.onOptionsItemSelected(item);
 
     switch (item.getItemId()) {
-    case R.id.save:         saveToDisk(); return true;
-    case android.R.id.home: finish();     return true;
+      case R.id.media_preview__forward: forward();    return true;
+      case R.id.save:                   saveToDisk(); return true;
+      case android.R.id.home:           finish();     return true;
     }
 
     return false;

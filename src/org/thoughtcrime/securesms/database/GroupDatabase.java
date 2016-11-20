@@ -1,6 +1,7 @@
 package org.thoughtcrime.securesms.database;
 
 
+import android.annotation.SuppressLint;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -8,17 +9,17 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.graphics.Bitmap;
-import android.util.Log;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import org.thoughtcrime.securesms.recipients.Recipient;
 import org.thoughtcrime.securesms.recipients.RecipientFactory;
-import org.thoughtcrime.securesms.recipients.RecipientFormattingException;
 import org.thoughtcrime.securesms.recipients.Recipients;
 import org.thoughtcrime.securesms.util.BitmapUtil;
 import org.thoughtcrime.securesms.util.GroupUtil;
 import org.thoughtcrime.securesms.util.TextSecurePreferences;
 import org.thoughtcrime.securesms.util.Util;
-import org.whispersystems.textsecure.api.messages.TextSecureAttachmentPointer;
+import org.whispersystems.signalservice.api.messages.SignalServiceAttachmentPointer;
 
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
@@ -67,7 +68,8 @@ public class GroupDatabase extends Database {
     super(context, databaseHelper);
   }
 
-  public GroupRecord getGroup(byte[] groupId) {
+  public @Nullable GroupRecord getGroup(byte[] groupId) {
+    @SuppressLint("Recycle")
     Cursor cursor = databaseHelper.getReadableDatabase().query(TABLE_NAME, null, GROUP_ID + " = ?",
                                                                new String[] {GroupUtil.getEncodedId(groupId)},
                                                                null, null, null);
@@ -87,10 +89,15 @@ public class GroupDatabase extends Database {
     return new Reader(cursor);
   }
 
-  public Recipients getGroupMembers(byte[] groupId, boolean includeSelf) {
+  public Reader getGroups() {
+    Cursor cursor = databaseHelper.getReadableDatabase().query(TABLE_NAME, null, null, null, null, null, null);
+    return new Reader(cursor);
+  }
+
+  public @NonNull Recipients getGroupMembers(byte[] groupId, boolean includeSelf) {
     String          localNumber = TextSecurePreferences.getLocalNumber(context);
     List<String>    members     = getCurrentMembers(groupId);
-    List<Recipient> recipients  = new LinkedList<Recipient>();
+    List<Recipient> recipients  = new LinkedList<>();
 
     for (String member : members) {
       if (!includeSelf && member.equals(localNumber))
@@ -100,11 +107,11 @@ public class GroupDatabase extends Database {
                                         .getRecipientsList());
     }
 
-    return new Recipients(recipients);
+    return RecipientFactory.getRecipientsFor(context, recipients, false);
   }
 
   public void create(byte[] groupId, String title, List<String> members,
-                     TextSecureAttachmentPointer avatar, String relay)
+                     SignalServiceAttachmentPointer avatar, String relay)
   {
     ContentValues contentValues = new ContentValues();
     contentValues.put(GROUP_ID, GroupUtil.getEncodedId(groupId));
@@ -124,7 +131,7 @@ public class GroupDatabase extends Database {
     databaseHelper.getWritableDatabase().insert(TABLE_NAME, null, contentValues);
   }
 
-  public void update(byte[] groupId, String title, TextSecureAttachmentPointer avatar) {
+  public void update(byte[] groupId, String title, SignalServiceAttachmentPointer avatar) {
     ContentValues contentValues = new ContentValues();
     if (title != null) contentValues.put(TITLE, title);
 
@@ -138,7 +145,7 @@ public class GroupDatabase extends Database {
                                                 GROUP_ID + " = ?",
                                                 new String[] {GroupUtil.getEncodedId(groupId)});
 
-    RecipientFactory.clearCache();
+    RecipientFactory.clearCache(context);
     notifyDatabaseListeners();
   }
 
@@ -148,7 +155,7 @@ public class GroupDatabase extends Database {
     databaseHelper.getWritableDatabase().update(TABLE_NAME, contentValues, GROUP_ID +  " = ?",
                                                 new String[] {GroupUtil.getEncodedId(groupId)});
 
-    RecipientFactory.clearCache();
+    RecipientFactory.clearCache(context);
     notifyDatabaseListeners();
   }
 
@@ -163,7 +170,7 @@ public class GroupDatabase extends Database {
     databaseHelper.getWritableDatabase().update(TABLE_NAME, contentValues, GROUP_ID +  " = ?",
                                                 new String[] {GroupUtil.getEncodedId(groupId)});
 
-    RecipientFactory.clearCache();
+    RecipientFactory.clearCache(context);
     notifyDatabaseListeners();
   }
 
@@ -243,7 +250,7 @@ public class GroupDatabase extends Database {
       this.cursor = cursor;
     }
 
-    public GroupRecord getNext() {
+    public @Nullable GroupRecord getNext() {
       if (cursor == null || !cursor.moveToNext()) {
         return null;
       }

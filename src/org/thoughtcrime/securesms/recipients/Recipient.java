@@ -16,98 +16,114 @@
  */
 package org.thoughtcrime.securesms.recipients;
 
-import android.content.Context;
-import android.graphics.Bitmap;
 import android.net.Uri;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
-import org.thoughtcrime.securesms.contacts.ContactPhotoFactory;
+import org.thoughtcrime.securesms.color.MaterialColor;
+import org.thoughtcrime.securesms.contacts.avatars.ContactColors;
+import org.thoughtcrime.securesms.contacts.avatars.ContactPhoto;
+import org.thoughtcrime.securesms.contacts.avatars.ContactPhotoFactory;
 import org.thoughtcrime.securesms.recipients.RecipientProvider.RecipientDetails;
-import org.thoughtcrime.securesms.util.GroupUtil;
 import org.thoughtcrime.securesms.util.FutureTaskListener;
+import org.thoughtcrime.securesms.util.GroupUtil;
 import org.thoughtcrime.securesms.util.ListenableFutureTask;
 
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.Set;
+import java.util.WeakHashMap;
 
 public class Recipient {
 
   private final static String TAG = Recipient.class.getSimpleName();
 
-  private final HashSet<RecipientModifiedListener> listeners = new HashSet<RecipientModifiedListener>();
+  private final Set<RecipientModifiedListener> listeners = Collections.newSetFromMap(new WeakHashMap<RecipientModifiedListener, Boolean>());
 
   private final long recipientId;
 
-  private String number;
-  private String name;
+  private @NonNull  String  number;
+  private @Nullable String  name;
+  private boolean stale;
 
-  private Bitmap contactPhoto;
-  private Bitmap generatedAvatar;
+  private ContactPhoto contactPhoto;
+  private Uri          contactUri;
 
-  private Uri    contactUri;
+  @Nullable private MaterialColor color;
 
-  Recipient(String number, Bitmap contactPhoto,
-            long recipientId, ListenableFutureTask<RecipientDetails> future)
+  Recipient(long recipientId,
+            @NonNull  String number,
+            @Nullable Recipient stale,
+            @NonNull  ListenableFutureTask<RecipientDetails> future)
   {
-    this.number                     = number;
-    this.contactPhoto               = contactPhoto;
-    this.recipientId                = recipientId;
-    this.generatedAvatar            = null;
+    this.recipientId  = recipientId;
+    this.number       = number;
+    this.contactPhoto = ContactPhotoFactory.getLoadingPhoto();
+    this.color        = null;
+
+    if (stale != null) {
+      this.name         = stale.name;
+      this.contactUri   = stale.contactUri;
+      this.contactPhoto = stale.contactPhoto;
+      this.color        = stale.color;
+    }
 
     future.addListener(new FutureTaskListener<RecipientDetails>() {
       @Override
       public void onSuccess(RecipientDetails result) {
         if (result != null) {
-          HashSet<RecipientModifiedListener> localListeners;
-
           synchronized (Recipient.this) {
-            Recipient.this.name                      = result.name;
-            Recipient.this.number                    = result.number;
-            Recipient.this.contactUri                = result.contactUri;
-            Recipient.this.contactPhoto              = result.avatar;
-
-            localListeners                           = (HashSet<RecipientModifiedListener>) listeners.clone();
-            listeners.clear();
+            Recipient.this.name         = result.name;
+            Recipient.this.number       = result.number;
+            Recipient.this.contactUri   = result.contactUri;
+            Recipient.this.contactPhoto = result.avatar;
+            Recipient.this.color        = result.color;
           }
 
-          for (RecipientModifiedListener listener : localListeners)
-            listener.onModified(Recipient.this);
+          notifyListeners();
         }
       }
 
       @Override
       public void onFailure(Throwable error) {
-        Log.w("Recipient", error);
+        Log.w(TAG, error);
       }
     });
   }
 
-  Recipient(String name, String number, long recipientId, Uri contactUri, Bitmap contactPhoto) {
-    this.number                     = number;
-    this.recipientId                = recipientId;
-    this.contactUri                 = contactUri;
-    this.name                       = name;
-    this.contactPhoto               = contactPhoto;
+  Recipient(long recipientId, RecipientDetails details) {
+    this.recipientId  = recipientId;
+    this.number       = details.number;
+    this.contactUri   = details.contactUri;
+    this.name         = details.name;
+    this.contactPhoto = details.avatar;
+    this.color        = details.color;
   }
 
-  public synchronized Uri getContactUri() {
+  public synchronized @Nullable Uri getContactUri() {
     return this.contactUri;
   }
 
-  public synchronized void setContactPhoto(Bitmap bitmap) {
-    this.contactPhoto = bitmap;
-    notifyListeners();
-  }
-
-  public synchronized void setName(String name) {
-    this.name = name;
-    notifyListeners();
-  }
-
-  public synchronized String getName() {
+  public synchronized @Nullable String getName() {
     return this.name;
   }
 
-  public String getNumber() {
+  public synchronized @NonNull MaterialColor getColor() {
+    if      (color != null) return color;
+    else if (name != null)  return ContactColors.generateFor(name);
+    else                    return ContactColors.UNKNOWN_COLOR;
+  }
+
+  public void setColor(@NonNull MaterialColor color) {
+    synchronized (this) {
+      this.color = color;
+    }
+
+    notifyListeners();
+  }
+
+  public @NonNull String getNumber() {
     return number;
   }
 
@@ -127,36 +143,17 @@ public class Recipient {
     listeners.remove(listener);
   }
 
-  public void notifyListeners() {
-    HashSet<RecipientModifiedListener> localListeners;
-
-    synchronized (this) {
-      localListeners = (HashSet<RecipientModifiedListener>)listeners.clone();
-    }
-
-    for (RecipientModifiedListener listener : localListeners) {
-      listener.onModified(this);
-    }
-  }
-
   public synchronized String toShortString() {
     return (name == null ? number : name);
   }
 
-  public synchronized Bitmap getContactPhoto() {
+  public synchronized @NonNull ContactPhoto getContactPhoto() {
     return contactPhoto;
   }
 
-  public synchronized Bitmap getGeneratedAvatar(Context context) {
-    if (this.generatedAvatar == null)
-      this.generatedAvatar = AvatarGenerator.generateFor(context, this);
-
-    return this.generatedAvatar;
-  }
-
-  public static Recipient getUnknownRecipient(Context context) {
-    return new Recipient("Unknown", "Unknown", -1, null,
-                         ContactPhotoFactory.getDefaultContactPhoto(context));
+  public static Recipient getUnknownRecipient() {
+    return new Recipient(-1, new RecipientDetails("Unknown", "Unknown", null,
+                                                  ContactPhotoFactory.getDefaultContactPhoto(null), null));
   }
 
   @Override
@@ -174,7 +171,26 @@ public class Recipient {
     return 31 + (int)this.recipientId;
   }
 
-  public static interface RecipientModifiedListener {
+  private void notifyListeners() {
+    Set<RecipientModifiedListener> localListeners;
+
+    synchronized (this) {
+      localListeners = new HashSet<>(listeners);
+    }
+
+    for (RecipientModifiedListener listener : localListeners)
+      listener.onModified(this);
+  }
+
+  public interface RecipientModifiedListener {
     public void onModified(Recipient recipient);
+  }
+
+  boolean isStale() {
+    return stale;
+  }
+
+  void setStale() {
+    this.stale = true;
   }
 }

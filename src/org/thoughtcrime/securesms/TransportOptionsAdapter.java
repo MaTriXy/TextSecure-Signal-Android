@@ -1,6 +1,7 @@
 package org.thoughtcrime.securesms;
 
 import android.content.Context;
+import android.graphics.PorterDuff.Mode;
 import android.support.annotation.NonNull;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -8,6 +9,8 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
+
+import org.thoughtcrime.securesms.util.ViewUtil;
 
 import java.util.List;
 
@@ -50,12 +53,21 @@ public class TransportOptionsAdapter extends BaseAdapter {
       convertView = inflater.inflate(R.layout.transport_selection_list_item, parent, false);
     }
 
-    TransportOption transport = (TransportOption) getItem(position);
-    ImageView       imageView = (ImageView) convertView.findViewById(R.id.icon);
-    TextView        textView  = (TextView) convertView.findViewById(R.id.text);
+    TransportOption transport   = (TransportOption) getItem(position);
+    ImageView       imageView   = ViewUtil.findById(convertView, R.id.icon);
+    TextView        textView    = ViewUtil.findById(convertView, R.id.text);
+    TextView        subtextView = ViewUtil.findById(convertView, R.id.subtext);
 
+    imageView.getBackground().setColorFilter(transport.getBackgroundColor(), Mode.MULTIPLY);
     imageView.setImageResource(transport.getDrawable());
     textView.setText(transport.getDescription());
+
+    if (transport.getSimName().isPresent()) {
+      subtextView.setText(transport.getSimName().get());
+      subtextView.setVisibility(View.VISIBLE);
+    } else {
+      subtextView.setVisibility(View.GONE);
+    }
 
     return convertView;
   }

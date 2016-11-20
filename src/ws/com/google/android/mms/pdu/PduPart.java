@@ -17,20 +17,10 @@
 
 package ws.com.google.android.mms.pdu;
 
-import android.graphics.Bitmap;
 import android.net.Uri;
 
-import org.thoughtcrime.securesms.crypto.MasterSecret;
-import org.thoughtcrime.securesms.mms.MediaConstraints;
-import org.thoughtcrime.securesms.util.BitmapDecodingException;
-import org.thoughtcrime.securesms.util.BitmapUtil;
-import org.thoughtcrime.securesms.util.Util;
-
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-
-import ws.com.google.android.mms.ContentType;
 
 /**
  * The pdu part.
@@ -131,42 +121,11 @@ public class PduPart {
 
      private static final String TAG = "PduPart";
 
-     private long    id = -1;
-     private boolean isEncrypted;
-     private boolean isPendingPush;
-     private long    dataSize;
-     private Bitmap  thumbnail;
-     
      /**
       * Empty Constructor.
       */
      public PduPart() {
          mPartHeader = new HashMap<Integer, Object>();
-     }
-
-     public void setEncrypted(boolean isEncrypted) {
-    	 this.isEncrypted = isEncrypted;
-     }
-
-     public boolean getEncrypted() {
-    	 return isEncrypted;
-     }
-
-     public void setDataSize(long dataSize) {
-       this.dataSize = dataSize;
-     }
-
-     public long getDataSize() {
-       return this.dataSize;
-     }
-
-
-     public void setPendingPush(boolean isPendingPush) {
-       this.isPendingPush = isPendingPush;
-     }
-
-     public boolean isPendingPush() {
-       return isPendingPush;
      }
 
      /**
@@ -438,22 +397,6 @@ public class PduPart {
         } else {
             return new String(location);
         }
-    }
-
-    public long getId() {
-      return id;
-    }
-
-    public void setId(long id) {
-      this.id = id;
-    }
-
-    public Bitmap getThumbnail() {
-      return thumbnail;
-    }
-
-    public void setThumbnail(Bitmap thumbnail) {
-      this.thumbnail = thumbnail;
     }
 }
 

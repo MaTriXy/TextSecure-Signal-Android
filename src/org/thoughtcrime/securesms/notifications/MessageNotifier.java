@@ -17,48 +17,52 @@
 package org.thoughtcrime.securesms.notifications;
 
 import android.app.AlarmManager;
-import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.Color;
+import android.media.AudioAttributes;
 import android.media.AudioManager;
-import android.media.MediaPlayer;
+import android.media.Ringtone;
+import android.media.RingtoneManager;
 import android.net.Uri;
-import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.NotificationCompat.BigTextStyle;
-import android.support.v4.app.NotificationCompat.InboxStyle;
+import android.os.AsyncTask;
+import android.os.Build;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.text.Spannable;
 import android.text.SpannableString;
-import android.text.SpannableStringBuilder;
 import android.text.TextUtils;
 import android.text.style.StyleSpan;
 import android.util.Log;
 
+import org.thoughtcrime.securesms.ApplicationContext;
 import org.thoughtcrime.securesms.ConversationActivity;
-import org.thoughtcrime.securesms.ConversationListActivity;
 import org.thoughtcrime.securesms.R;
 import org.thoughtcrime.securesms.crypto.MasterSecret;
 import org.thoughtcrime.securesms.database.DatabaseFactory;
+import org.thoughtcrime.securesms.database.MessagingDatabase;
+import org.thoughtcrime.securesms.database.MessagingDatabase.MarkedMessageInfo;
+import org.thoughtcrime.securesms.database.MessagingDatabase.SyncMessageId;
 import org.thoughtcrime.securesms.database.MmsSmsDatabase;
 import org.thoughtcrime.securesms.database.PushDatabase;
 import org.thoughtcrime.securesms.database.SmsDatabase;
+import org.thoughtcrime.securesms.database.ThreadDatabase;
+import org.thoughtcrime.securesms.database.model.MediaMmsMessageRecord;
 import org.thoughtcrime.securesms.database.model.MessageRecord;
+import org.thoughtcrime.securesms.jobs.MultiDeviceReadUpdateJob;
+import org.thoughtcrime.securesms.mms.SlideDeck;
 import org.thoughtcrime.securesms.recipients.Recipient;
 import org.thoughtcrime.securesms.recipients.RecipientFactory;
 import org.thoughtcrime.securesms.recipients.Recipients;
 import org.thoughtcrime.securesms.service.KeyCachingService;
-import org.thoughtcrime.securesms.util.BitmapUtil;
+import org.thoughtcrime.securesms.util.ServiceUtil;
 import org.thoughtcrime.securesms.util.SpanUtil;
 import org.thoughtcrime.securesms.util.TextSecurePreferences;
-import org.whispersystems.textsecure.api.messages.TextSecureEnvelope;
+import org.whispersystems.signalservice.api.messages.SignalServiceEnvelope;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.concurrent.TimeUnit;
@@ -75,9 +79,13 @@ import me.leolin.shortcutbadger.ShortcutBadger;
 
 public class MessageNotifier {
 
+  private static final String TAG = MessageNotifier.class.getSimpleName();
+
   public static final int NOTIFICATION_ID = 1338;
 
   private volatile static long visibleThread = -1;
+
+  public static final String EXTRA_VOICE_REPLY = "extra_voice_reply";
 
   public static void setVisibleThread(long threadId) {
     visibleThread = threadId;
@@ -85,52 +93,78 @@ public class MessageNotifier {
 
   public static void notifyMessageDeliveryFailed(Context context, Recipients recipients, long threadId) {
     if (visibleThread == threadId) {
-      sendInThreadNotification(context);
+      sendInThreadNotification(context, recipients);
     } else {
       Intent intent = new Intent(context, ConversationActivity.class);
-      intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-      intent.putExtra("recipients", recipients.getIds());
-      intent.putExtra("thread_id", threadId);
-      intent.setData((Uri.parse("custom://"+System.currentTimeMillis())));
+      intent.putExtra(ConversationActivity.RECIPIENTS_EXTRA, recipients.getIds());
+      intent.putExtra(ConversationActivity.THREAD_ID_EXTRA, threadId);
+      intent.setData((Uri.parse("custom://" + System.currentTimeMillis())));
 
-      NotificationCompat.Builder builder = new NotificationCompat.Builder(context);
-      builder.setSmallIcon(R.drawable.icon_notification);
-      builder.setLargeIcon(BitmapFactory.decodeResource(context.getResources(),
-                                                        R.drawable.ic_action_warning_red));
-      builder.setContentTitle(context.getString(R.string.MessageNotifier_message_delivery_failed));
-      builder.setContentText(context.getString(R.string.MessageNotifier_failed_to_deliver_message));
-      builder.setTicker(context.getString(R.string.MessageNotifier_error_delivering_message));
-      builder.setContentIntent(PendingIntent.getActivity(context, 0, intent, 0));
-      builder.setAutoCancel(true);
-      setNotificationAlarms(context, builder, true);
-
+      FailedNotificationBuilder builder = new FailedNotificationBuilder(context, TextSecurePreferences.getNotificationPrivacy(context), intent);
       ((NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE))
         .notify((int)threadId, builder.build());
     }
   }
 
-  public static void updateNotification(Context context, MasterSecret masterSecret) {
+  public static void updateNotification(@NonNull Context context, @Nullable MasterSecret masterSecret) {
     if (!TextSecurePreferences.isNotificationsEnabled(context)) {
       return;
     }
 
-    updateNotification(context, masterSecret, false, 0);
+    updateNotification(context, masterSecret, false, false, 0);
   }
 
-  public static void updateNotification(Context context, MasterSecret masterSecret, long threadId) {
-    if (!TextSecurePreferences.isNotificationsEnabled(context)) {
+  public static void updateNotification(@NonNull  Context context,
+                                        @Nullable MasterSecret masterSecret,
+                                        long threadId)
+  {
+    updateNotification(context, masterSecret, false, threadId);
+  }
+
+  public static void updateNotification(@NonNull  Context context,
+                                        @Nullable MasterSecret masterSecret,
+                                        boolean   includePushDatabase,
+                                        long      threadId)
+  {
+    updateNotification(context, masterSecret, includePushDatabase, threadId, true);
+  }
+
+  public static void updateNotification(@NonNull  Context context,
+                                        @Nullable MasterSecret masterSecret,
+                                        boolean   includePushDatabase,
+                                        long      threadId,
+                                        boolean   signal)
+  {
+    boolean    isVisible  = visibleThread == threadId;
+
+    ThreadDatabase threads    = DatabaseFactory.getThreadDatabase(context);
+    Recipients     recipients = DatabaseFactory.getThreadDatabase(context)
+                                               .getRecipientsForThreadId(threadId);
+
+    if (isVisible) {
+      List<MarkedMessageInfo> messageIds = threads.setRead(threadId);
+      MarkReadReceiver.process(context, messageIds);
+    }
+
+    if (!TextSecurePreferences.isNotificationsEnabled(context) ||
+        (recipients != null && recipients.isMuted()))
+    {
       return;
     }
 
-    if (visibleThread == threadId) {
-      DatabaseFactory.getThreadDatabase(context).setRead(threadId);
-      sendInThreadNotification(context);
+    if (isVisible) {
+      sendInThreadNotification(context, threads.getRecipientsForThreadId(threadId));
     } else {
-      updateNotification(context, masterSecret, true, 0);
+      updateNotification(context, masterSecret, signal, includePushDatabase, 0);
     }
   }
 
-  private static void updateNotification(Context context, MasterSecret masterSecret, boolean signal, int reminderCount) {
+  private static void updateNotification(@NonNull  Context context,
+                                         @Nullable MasterSecret masterSecret,
+                                         boolean signal,
+                                         boolean includePushDatabase,
+                                         int     reminderCount)
+  {
     Cursor telcoCursor = null;
     Cursor pushCursor  = null;
 
@@ -150,25 +184,30 @@ public class MessageNotifier {
 
       NotificationState notificationState = constructNotificationState(context, masterSecret, telcoCursor);
 
-      appendPushNotificationState(context, masterSecret, notificationState, pushCursor);
+      if (includePushDatabase) {
+        appendPushNotificationState(context, notificationState, pushCursor);
+      }
 
       if (notificationState.hasMultipleThreads()) {
-        sendMultipleThreadNotification(context, masterSecret, notificationState, signal);
+        sendMultipleThreadNotification(context, notificationState, signal);
       } else {
         sendSingleThreadNotification(context, masterSecret, notificationState, signal);
       }
 
       updateBadge(context, notificationState.getMessageCount());
-      scheduleReminder(context, masterSecret, reminderCount);
+
+      if (signal) {
+        scheduleReminder(context, reminderCount);
+      }
     } finally {
       if (telcoCursor != null) telcoCursor.close();
       if (pushCursor != null)  pushCursor.close();
     }
   }
 
-  private static void sendSingleThreadNotification(Context context,
-                                                   MasterSecret masterSecret,
-                                                   NotificationState notificationState,
+  private static void sendSingleThreadNotification(@NonNull  Context context,
+                                                   @Nullable MasterSecret masterSecret,
+                                                   @NonNull  NotificationState notificationState,
                                                    boolean signal)
   {
     if (notificationState.getNotifications().isEmpty()) {
@@ -177,148 +216,127 @@ public class MessageNotifier {
       return;
     }
 
-    List<NotificationItem>     notifications  = notificationState.getNotifications();
-    NotificationCompat.Builder builder        = new NotificationCompat.Builder(context);
-    Recipient                  recipient      = notifications.get(0).getIndividualRecipient();
-    Bitmap                     recipientPhoto = recipient.getContactPhoto();
+    SingleRecipientNotificationBuilder builder       = new SingleRecipientNotificationBuilder(context, masterSecret, TextSecurePreferences.getNotificationPrivacy(context));
+    List<NotificationItem>             notifications = notificationState.getNotifications();
+    Recipients                         recipients    = notifications.get(0).getRecipients();
 
-    if (recipientPhoto != null) builder.setLargeIcon(BitmapUtil.getCircleBitmap(recipientPhoto));
-    builder.setSmallIcon(R.drawable.icon_notification);
-    builder.setColor(context.getResources().getColor(R.color.textsecure_primary));
-    builder.setContentTitle(recipient.toShortString());
-    builder.setContentText(notifications.get(0).getText());
+    builder.setThread(notifications.get(0).getRecipients());
+    builder.setMessageCount(notificationState.getMessageCount());
+    builder.setPrimaryMessageBody(recipients, notifications.get(0).getIndividualRecipient(),
+                                  notifications.get(0).getText(), notifications.get(0).getSlideDeck());
     builder.setContentIntent(notifications.get(0).getPendingIntent(context));
-    builder.setContentInfo(String.valueOf(notificationState.getMessageCount()));
-    builder.setPriority(NotificationCompat.PRIORITY_HIGH);
-    builder.setNumber(notificationState.getMessageCount());
-    builder.setCategory(NotificationCompat.CATEGORY_MESSAGE);
-    builder.setDeleteIntent(PendingIntent.getBroadcast(context, 0, new Intent(DeleteReceiver.DELETE_REMINDER_ACTION), 0));
-    if (recipient.getContactUri() != null) builder.addPerson(recipient.getContactUri().toString());
 
-    if (masterSecret != null) {
-      builder.addAction(R.drawable.check, context.getString(R.string.MessageNotifier_mark_as_read),
-                        notificationState.getMarkAsReadIntent(context, masterSecret));
-    }
+    long timestamp = notifications.get(0).getTimestamp();
+    if (timestamp != 0) builder.setWhen(timestamp);
 
-    SpannableStringBuilder content = new SpannableStringBuilder();
+    builder.addActions(masterSecret,
+                       notificationState.getMarkAsReadIntent(context),
+                       notificationState.getQuickReplyIntent(context, notifications.get(0).getRecipients()),
+                       notificationState.getWearableReplyIntent(context, notifications.get(0).getRecipients()));
 
     ListIterator<NotificationItem> iterator = notifications.listIterator(notifications.size());
+
     while(iterator.hasPrevious()) {
       NotificationItem item = iterator.previous();
-      content.append(item.getBigStyleSummary());
-      content.append('\n');
+      builder.addMessageBody(item.getRecipients(), item.getIndividualRecipient(), item.getText());
     }
 
-    builder.setStyle(new BigTextStyle().bigText(content));
-
-    setNotificationAlarms(context, builder, signal);
-
     if (signal) {
-      builder.setTicker(notifications.get(0).getTickerText());
+      builder.setAlarms(notificationState.getRingtone(), notificationState.getVibrate());
+      builder.setTicker(notifications.get(0).getIndividualRecipient(),
+                        notifications.get(0).getText());
     }
 
     ((NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE))
       .notify(NOTIFICATION_ID, builder.build());
   }
 
-  private static void sendMultipleThreadNotification(Context context,
-                                                     MasterSecret masterSecret,
-                                                     NotificationState notificationState,
+  private static void sendMultipleThreadNotification(@NonNull  Context context,
+                                                     @NonNull  NotificationState notificationState,
                                                      boolean signal)
   {
-    List<NotificationItem> notifications = notificationState.getNotifications();
-    NotificationCompat.Builder builder   = new NotificationCompat.Builder(context);
+    MultipleRecipientNotificationBuilder builder       = new MultipleRecipientNotificationBuilder(context, TextSecurePreferences.getNotificationPrivacy(context));
+    List<NotificationItem>               notifications = notificationState.getNotifications();
 
-    builder.setColor(context.getResources().getColor(R.color.textsecure_primary));
-    builder.setSmallIcon(R.drawable.icon_notification);
-    builder.setContentTitle(context.getString(R.string.app_name));
-    builder.setSubText(context.getString(R.string.MessageNotifier_d_messages_in_d_conversations,
-                                         notificationState.getMessageCount(),
-                                         notificationState.getThreadCount()));
-    builder.setContentText(context.getString(R.string.MessageNotifier_most_recent_from_s,
-                                             notifications.get(0).getIndividualRecipientName()));
-    builder.setContentIntent(PendingIntent.getActivity(context, 0, new Intent(context, ConversationListActivity.class), 0));
-    
-    builder.setContentInfo(String.valueOf(notificationState.getMessageCount()));
-    builder.setNumber(notificationState.getMessageCount());
-    builder.setCategory(NotificationCompat.CATEGORY_MESSAGE);
+    builder.setMessageCount(notificationState.getMessageCount(), notificationState.getThreadCount());
+    builder.setMostRecentSender(notifications.get(0).getIndividualRecipient());
 
-    builder.setDeleteIntent(PendingIntent.getBroadcast(context, 0, new Intent(DeleteReceiver.DELETE_REMINDER_ACTION), 0));
+    long timestamp = notifications.get(0).getTimestamp();
+    if (timestamp != 0) builder.setWhen(timestamp);
 
-    if (masterSecret != null) {
-      builder.addAction(R.drawable.check, context.getString(R.string.MessageNotifier_mark_all_as_read),
-                        notificationState.getMarkAsReadIntent(context, masterSecret));
-    }
-
-    InboxStyle style = new InboxStyle();
+    builder.addActions(notificationState.getMarkAsReadIntent(context));
 
     ListIterator<NotificationItem> iterator = notifications.listIterator(notifications.size());
+
     while(iterator.hasPrevious()) {
       NotificationItem item = iterator.previous();
-      style.addLine(item.getTickerText());
-      if (item.getIndividualRecipient().getContactUri() != null) {
-        builder.addPerson(item.getIndividualRecipient().getContactUri().toString());
-      }
+      builder.addMessageBody(item.getIndividualRecipient(), item.getText());
     }
 
-    builder.setStyle(style);
-
-    setNotificationAlarms(context, builder, signal);
-
     if (signal) {
-      builder.setTicker(notifications.get(0).getTickerText());
+      builder.setAlarms(notificationState.getRingtone(), notificationState.getVibrate());
+      builder.setTicker(notifications.get(0).getIndividualRecipient(),
+                        notifications.get(0).getText());
     }
 
     ((NotificationManager)context.getSystemService(Context.NOTIFICATION_SERVICE))
       .notify(NOTIFICATION_ID, builder.build());
   }
 
-  private static void sendInThreadNotification(Context context) {
-    try {
-      if (!TextSecurePreferences.isInThreadNotifications(context)) {
+  private static void sendInThreadNotification(Context context, Recipients recipients) {
+    if (!TextSecurePreferences.isInThreadNotifications(context) ||
+        ServiceUtil.getAudioManager(context).getRingerMode() != AudioManager.RINGER_MODE_NORMAL)
+    {
+      return;
+    }
+
+    Uri uri = recipients != null ? recipients.getRingtone() : null;
+
+    if (uri == null) {
+      String ringtone = TextSecurePreferences.getNotificationRingtone(context);
+
+      if (ringtone == null) {
+        Log.w(TAG, "ringtone preference was null.");
         return;
       }
 
-      String ringtone = TextSecurePreferences.getNotificationRingtone(context);
+      uri = Uri.parse(ringtone);
 
-      if (ringtone == null)
+      if (uri == null) {
+        Log.w(TAG, "couldn't parse ringtone uri " + ringtone);
         return;
-
-      Uri uri            = Uri.parse(ringtone);
-      MediaPlayer player = new MediaPlayer();
-      player.setAudioStreamType(AudioManager.STREAM_NOTIFICATION);
-      player.setDataSource(context, uri);
-      player.setLooping(false);
-      player.setVolume(0.25f, 0.25f);
-      player.prepare();
-
-      final AudioManager audioManager = ((AudioManager)context.getSystemService(Context.AUDIO_SERVICE));
-
-      audioManager.requestAudioFocus(null, AudioManager.STREAM_NOTIFICATION,
-                                     AudioManager.AUDIOFOCUS_GAIN_TRANSIENT_MAY_DUCK);
-
-      player.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
-        @Override
-        public void onCompletion(MediaPlayer mp) {
-          audioManager.abandonAudioFocus(null);
-        }
-      });
-
-      player.start();
-    } catch (IOException ioe) {
-      Log.w("MessageNotifier", ioe);
+      }
     }
+
+    if (uri.toString().isEmpty()) {
+      Log.d(TAG, "ringtone uri is empty");
+      return;
+    }
+
+    Ringtone ringtone = RingtoneManager.getRingtone(context, uri);
+
+    if (ringtone == null) {
+      Log.w(TAG, "ringtone is null");
+      return;
+    }
+
+    if (Build.VERSION.SDK_INT >= 21) {
+      ringtone.setAudioAttributes(new AudioAttributes.Builder().setContentType(AudioAttributes.CONTENT_TYPE_UNKNOWN)
+                                                               .setUsage(AudioAttributes.USAGE_NOTIFICATION_COMMUNICATION_INSTANT)
+                                                               .build());
+    } else {
+      ringtone.setStreamType(AudioManager.STREAM_NOTIFICATION);
+    }
+
+    ringtone.play();
   }
 
-  private static void appendPushNotificationState(Context context,
-                                                  MasterSecret masterSecret,
-                                                  NotificationState notificationState,
-                                                  Cursor cursor)
+  private static void appendPushNotificationState(@NonNull Context context,
+                                                  @NonNull NotificationState notificationState,
+                                                  @NonNull Cursor cursor)
   {
-    if (masterSecret != null) return;
-
     PushDatabase.Reader reader = null;
-    TextSecureEnvelope envelope;
+    SignalServiceEnvelope envelope;
 
     try {
       reader = DatabaseFactory.getPushDatabase(context).readerFor(cursor);
@@ -327,10 +345,12 @@ public class MessageNotifier {
         Recipients      recipients = RecipientFactory.getRecipientsFromString(context, envelope.getSource(), false);
         Recipient       recipient  = recipients.getPrimaryRecipient();
         long            threadId   = DatabaseFactory.getThreadDatabase(context).getThreadIdFor(recipients);
-        SpannableString body       = new SpannableString(context.getString(R.string.MessageNotifier_encrypted_message));
+        SpannableString body       = new SpannableString(context.getString(R.string.MessageNotifier_locked_message));
         body.setSpan(new StyleSpan(android.graphics.Typeface.ITALIC), 0, body.length(), Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
 
-        notificationState.addNotification(new NotificationItem(recipient, recipients, null, threadId, body, null));
+        if (!recipients.isMuted()) {
+          notificationState.addNotification(new NotificationItem(recipient, recipients, null, threadId, body, 0, null));
+        }
       }
     } finally {
       if (reader != null)
@@ -338,9 +358,9 @@ public class MessageNotifier {
     }
   }
 
-  private static NotificationState constructNotificationState(Context context,
-                                                              MasterSecret masterSecret,
-                                                              Cursor cursor)
+  private static NotificationState constructNotificationState(@NonNull  Context context,
+                                                              @Nullable MasterSecret masterSecret,
+                                                              @NonNull  Cursor cursor)
   {
     NotificationState notificationState = new NotificationState();
     MessageRecord record;
@@ -350,68 +370,43 @@ public class MessageNotifier {
     else                      reader = DatabaseFactory.getMmsSmsDatabase(context).readerFor(cursor, masterSecret);
 
     while ((record = reader.getNext()) != null) {
-      Recipient       recipient        = record.getIndividualRecipient();
-      Recipients      recipients       = record.getRecipients();
-      long            threadId         = record.getThreadId();
-      CharSequence    body             = record.getDisplayBody();
-      Uri             image            = null;
-      Recipients      threadRecipients = null;
+      Recipient    recipient        = record.getIndividualRecipient();
+      Recipients   recipients       = record.getRecipients();
+      long         threadId         = record.getThreadId();
+      CharSequence body             = record.getDisplayBody();
+      Recipients   threadRecipients = null;
+      SlideDeck    slideDeck        = null;
+      long         timestamp        = record.getTimestamp();
+      
 
       if (threadId != -1) {
         threadRecipients = DatabaseFactory.getThreadDatabase(context).getRecipientsForThreadId(threadId);
       }
 
       if (SmsDatabase.Types.isDecryptInProgressType(record.getType()) || !record.getBody().isPlaintext()) {
-        body = SpanUtil.italic(context.getString(R.string.MessageNotifier_encrypted_message));
+        body = SpanUtil.italic(context.getString(R.string.MessageNotifier_locked_message));
       } else if (record.isMms() && TextUtils.isEmpty(body)) {
         body = SpanUtil.italic(context.getString(R.string.MessageNotifier_media_message));
-      } else if (record.isMms()) {
+        slideDeck = ((MediaMmsMessageRecord)record).getSlideDeck();
+      } else if (record.isMms() && !record.isMmsNotification()) {
         String message      = context.getString(R.string.MessageNotifier_media_message_with_text, body);
         int    italicLength = message.length() - body.length();
         body = SpanUtil.italic(message, italicLength);
+        slideDeck = ((MediaMmsMessageRecord)record).getSlideDeck();
       }
 
-      notificationState.addNotification(new NotificationItem(recipient, recipients, threadRecipients, threadId, body, image));
+      if (threadRecipients == null || !threadRecipients.isMuted()) {
+        notificationState.addNotification(new NotificationItem(recipient, recipients, threadRecipients, threadId, body, timestamp, slideDeck));
+      }
     }
 
     reader.close();
     return notificationState;
   }
 
-  private static void setNotificationAlarms(Context context,
-                                            NotificationCompat.Builder builder,
-                                            boolean signal)
-  {
-    String ringtone              = TextSecurePreferences.getNotificationRingtone(context);
-    boolean vibrate              = TextSecurePreferences.isNotificationVibrateEnabled(context);
-    String ledColor              = TextSecurePreferences.getNotificationLedColor(context);
-    String ledBlinkPattern       = TextSecurePreferences.getNotificationLedPattern(context);
-    String ledBlinkPatternCustom = TextSecurePreferences.getNotificationLedPatternCustom(context);
-    String[] blinkPatternArray   = parseBlinkPattern(ledBlinkPattern, ledBlinkPatternCustom);
-
-    builder.setSound(TextUtils.isEmpty(ringtone) || !signal ? null : Uri.parse(ringtone));
-
-    if (signal && vibrate) {
-      builder.setDefaults(Notification.DEFAULT_VIBRATE);
-    }
-
-    if (!ledColor.equals("none")) {
-      builder.setLights(Color.parseColor(ledColor),
-                        Integer.parseInt(blinkPatternArray[0]),
-                        Integer.parseInt(blinkPatternArray[1]));
-    }
-  }
-
-  private static String[] parseBlinkPattern(String blinkPattern, String blinkPatternCustom) {
-    if (blinkPattern.equals("custom"))
-      blinkPattern = blinkPatternCustom;
-
-    return blinkPattern.split(",");
-  }
-
   private static void updateBadge(Context context, int count) {
     try {
-      ShortcutBadger.setBadge(context, count);
+      ShortcutBadger.setBadge(context.getApplicationContext(), count);
     } catch (Throwable t) {
       // NOTE :: I don't totally trust this thing, so I'm catching
       // everything.
@@ -419,7 +414,7 @@ public class MessageNotifier {
     }
   }
 
-  private static void scheduleReminder(Context context, MasterSecret masterSecret, int count) {
+  private static void scheduleReminder(Context context, int count) {
     if (count >= TextSecurePreferences.getRepeatAlertsCount(context)) {
       return;
     }
@@ -446,10 +441,17 @@ public class MessageNotifier {
     public static final String REMINDER_ACTION = "org.thoughtcrime.securesms.MessageNotifier.REMINDER_ACTION";
 
     @Override
-    public void onReceive(Context context, Intent intent) {
-      MasterSecret masterSecret  = KeyCachingService.getMasterSecret(context);
-      int          reminderCount = intent.getIntExtra("reminder_count", 0);
-      MessageNotifier.updateNotification(context, masterSecret, true, reminderCount + 1);
+    public void onReceive(final Context context, final Intent intent) {
+      new AsyncTask<Void, Void, Void>() {
+        @Override
+        protected Void doInBackground(Void... params) {
+          MasterSecret masterSecret  = KeyCachingService.getMasterSecret(context);
+          int          reminderCount = intent.getIntExtra("reminder_count", 0);
+          MessageNotifier.updateNotification(context, masterSecret, true, true, reminderCount + 1);
+
+          return null;
+        }
+      }.execute();
     }
   }
 

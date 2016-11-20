@@ -1,7 +1,11 @@
 package org.thoughtcrime.securesms;
 
+import android.support.annotation.DrawableRes;
+import android.support.annotation.NonNull;
+
 import org.thoughtcrime.securesms.util.CharacterCalculator;
 import org.thoughtcrime.securesms.util.CharacterCalculator.CharacterState;
+import org.whispersystems.libsignal.util.guava.Optional;
 
 public class TransportOption {
 
@@ -10,26 +14,47 @@ public class TransportOption {
     TEXTSECURE
   }
 
-  private int                 drawable;
-  private String              text;
-  private Type                type;
-  private String              composeHint;
-  private CharacterCalculator characterCalculator;
+  private final int                             drawable;
+  private final int                             backgroundColor;
+  private final @NonNull String                 text;
+  private final @NonNull Type                   type;
+  private final @NonNull String                 composeHint;
+  private final @NonNull CharacterCalculator    characterCalculator;
+  private final @NonNull Optional<CharSequence> simName;
+  private final @NonNull Optional<Integer>      simSubscriptionId;
 
-  public TransportOption(Type type,
-                         int drawable,
-                         String text,
-                         String composeHint,
-                         CharacterCalculator characterCalculator)
+  public TransportOption(@NonNull  Type type,
+                         @DrawableRes int drawable,
+                         int backgroundColor,
+                         @NonNull String text,
+                         @NonNull String composeHint,
+                         @NonNull CharacterCalculator characterCalculator)
+  {
+    this(type, drawable, backgroundColor, text, composeHint, characterCalculator,
+         Optional.<CharSequence>absent(), Optional.<Integer>absent());
+  }
+
+  public TransportOption(@NonNull  Type type,
+                         @DrawableRes int drawable,
+                         int backgroundColor,
+                         @NonNull String text,
+                         @NonNull String composeHint,
+                         @NonNull CharacterCalculator characterCalculator,
+                         @NonNull Optional<CharSequence> simName,
+                         @NonNull Optional<Integer> simSubscriptionId)
   {
     this.type                = type;
     this.drawable            = drawable;
+    this.backgroundColor     = backgroundColor;
     this.text                = text;
     this.composeHint         = composeHint;
     this.characterCalculator = characterCalculator;
+    this.simName             = simName;
+    this.simSubscriptionId   = simSubscriptionId;
   }
 
-  public Type getType() {
+
+  public @NonNull Type getType() {
     return type;
   }
 
@@ -37,27 +62,38 @@ public class TransportOption {
     return this.type == type;
   }
 
-  public boolean isPlaintext() {
-    return type == Type.SMS;
-  }
-
   public boolean isSms() {
     return type == Type.SMS;
   }
 
-  public CharacterState calculateCharacters(int charactersSpent) {
-    return characterCalculator.calculateCharacters(charactersSpent);
+  public CharacterState calculateCharacters(String messageBody) {
+    return characterCalculator.calculateCharacters(messageBody);
   }
 
-  public int getDrawable() {
+  public @DrawableRes int getDrawable() {
     return drawable;
   }
 
-  public String getComposeHint() {
+  public int getBackgroundColor() {
+    return backgroundColor;
+  }
+
+  public @NonNull String getComposeHint() {
     return composeHint;
   }
 
-  public String getDescription() {
+  public @NonNull String getDescription() {
     return text;
   }
+
+  @NonNull
+  public Optional<CharSequence> getSimName() {
+    return simName;
+  }
+
+  @NonNull
+  public Optional<Integer> getSimSubscriptionId() {
+    return simSubscriptionId;
+  }
+
 }

@@ -16,8 +16,10 @@
  */
 package org.thoughtcrime.securesms;
 
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.database.ContentObserver;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.provider.ContactsContract;
@@ -29,6 +31,7 @@ import android.support.v7.widget.SearchView;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.widget.Toast;
 
 import org.thoughtcrime.securesms.components.RatingManager;
 import org.thoughtcrime.securesms.crypto.MasterSecret;
@@ -41,7 +44,6 @@ import org.thoughtcrime.securesms.service.KeyCachingService;
 import org.thoughtcrime.securesms.util.DynamicLanguage;
 import org.thoughtcrime.securesms.util.DynamicTheme;
 import org.thoughtcrime.securesms.util.TextSecurePreferences;
-
 
 public class ConversationListActivity extends PassphraseRequiredActionBarActivity
     implements ConversationListFragment.ConversationSelectedListener
@@ -67,7 +69,7 @@ public class ConversationListActivity extends PassphraseRequiredActionBarActivit
 
     getSupportActionBar().setDisplayOptions(ActionBar.DISPLAY_SHOW_HOME | ActionBar.DISPLAY_SHOW_TITLE);
     getSupportActionBar().setTitle(R.string.app_name);
-    fragment = initFragment(android.R.id.content, new ConversationListFragment(), masterSecret);
+    fragment = initFragment(android.R.id.content, new ConversationListFragment(), masterSecret, dynamicLanguage.getCurrentLocale());
 
     initializeContactUpdatesReceiver();
 
@@ -107,6 +109,7 @@ public class ConversationListActivity extends PassphraseRequiredActionBarActivit
 
   private void initializeSearch(MenuItem searchViewItem) {
     SearchView searchView = (SearchView)MenuItemCompat.getActionView(searchViewItem);
+    searchView.setQueryHint(getString(R.string.ConversationListActivity_search));
     searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
       @Override
       public boolean onQueryTextSubmit(String query) {
@@ -146,12 +149,13 @@ public class ConversationListActivity extends PassphraseRequiredActionBarActivit
     super.onOptionsItemSelected(item);
 
     switch (item.getItemId()) {
-    case R.id.menu_new_group:         createGroup();                  return true;
-    case R.id.menu_settings:          handleDisplaySettings();        return true;
-    case R.id.menu_clear_passphrase:  handleClearPassphrase();        return true;
-    case R.id.menu_mark_all_read:     handleMarkAllRead();            return true;
-    case R.id.menu_import_export:     handleImportExport();           return true;
-    case R.id.menu_my_identity:       handleMyIdentity();             return true;
+    case R.id.menu_new_group:         createGroup();           return true;
+    case R.id.menu_settings:          handleDisplaySettings(); return true;
+    case R.id.menu_clear_passphrase:  handleClearPassphrase(); return true;
+    case R.id.menu_mark_all_read:     handleMarkAllRead();     return true;
+    case R.id.menu_import_export:     handleImportExport();    return true;
+    case R.id.menu_invite:            handleInvite();          return true;
+    case R.id.menu_help:              handleHelp();            return true;
     }
 
     return false;
@@ -159,20 +163,23 @@ public class ConversationListActivity extends PassphraseRequiredActionBarActivit
 
   @Override
   public void onCreateConversation(long threadId, Recipients recipients, int distributionType) {
-    createConversation(threadId, recipients, distributionType);
-  }
-
-  private void createGroup() {
-    Intent intent = new Intent(this, GroupCreateActivity.class);
-    startActivity(intent);
-  }
-
-  private void createConversation(long threadId, Recipients recipients, int distributionType) {
     Intent intent = new Intent(this, ConversationActivity.class);
     intent.putExtra(ConversationActivity.RECIPIENTS_EXTRA, recipients.getIds());
     intent.putExtra(ConversationActivity.THREAD_ID_EXTRA, threadId);
     intent.putExtra(ConversationActivity.DISTRIBUTION_TYPE_EXTRA, distributionType);
 
+    startActivity(intent);
+    overridePendingTransition(R.anim.slide_from_right, R.anim.fade_scale_out);
+  }
+
+  @Override
+  public void onSwitchToArchive() {
+    Intent intent = new Intent(this, ConversationListArchiveActivity.class);
+    startActivity(intent);
+  }
+
+  private void createGroup() {
+    Intent intent = new Intent(this, GroupCreateActivity.class);
     startActivity(intent);
   }
 
@@ -191,10 +198,6 @@ public class ConversationListActivity extends PassphraseRequiredActionBarActivit
     startActivity(new Intent(this, ImportExportActivity.class));
   }
 
-  private void handleMyIdentity() {
-    startActivity(new Intent(this, ViewLocalIdentityActivity.class));
-  }
-
   private void handleMarkAllRead() {
     new AsyncTask<Void, Void, Void>() {
       @Override
@@ -206,14 +209,25 @@ public class ConversationListActivity extends PassphraseRequiredActionBarActivit
     }.execute();
   }
 
+  private void handleInvite() {
+    startActivity(new Intent(this, InviteActivity.class));
+  }
+
+  private void handleHelp() {
+    try {
+      startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse("http://support.whispersystems.org")));
+    } catch (ActivityNotFoundException e) {
+      Toast.makeText(this, R.string.ConversationListActivity_there_is_no_browser_installed_on_your_device, Toast.LENGTH_LONG).show();
+    }
+  }
+
   private void initializeContactUpdatesReceiver() {
     observer = new ContentObserver(null) {
       @Override
       public void onChange(boolean selfChange) {
         super.onChange(selfChange);
-        Log.w(TAG, "detected android contact data changed, refreshing cache");
-        // TODO only clear updated recipients from cache
-        RecipientFactory.clearCache();
+        Log.w(TAG, "Detected android contact data changed, refreshing cache");
+        RecipientFactory.clearCache(ConversationListActivity.this);
         ConversationListActivity.this.runOnUiThread(new Runnable() {
           @Override
           public void run() {

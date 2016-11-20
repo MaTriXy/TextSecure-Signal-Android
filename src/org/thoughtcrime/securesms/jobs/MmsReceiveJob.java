@@ -7,6 +7,9 @@ import android.util.Pair;
 import org.thoughtcrime.securesms.ApplicationContext;
 import org.thoughtcrime.securesms.database.DatabaseFactory;
 import org.thoughtcrime.securesms.database.MmsDatabase;
+import org.thoughtcrime.securesms.recipients.RecipientFactory;
+import org.thoughtcrime.securesms.recipients.Recipients;
+import org.thoughtcrime.securesms.util.Util;
 import org.whispersystems.jobqueue.JobParameters;
 
 import ws.com.google.android.mms.pdu.GenericPdu;
@@ -16,16 +19,20 @@ import ws.com.google.android.mms.pdu.PduParser;
 
 public class MmsReceiveJob extends ContextJob {
 
+  private static final long serialVersionUID = 1L;
+
   private static final String TAG = MmsReceiveJob.class.getSimpleName();
 
   private final byte[] data;
+  private final int    subscriptionId;
 
-  public MmsReceiveJob(Context context, byte[] data) {
+  public MmsReceiveJob(Context context, byte[] data, int subscriptionId) {
     super(context, JobParameters.newBuilder()
                                 .withWakeLock(true)
                                 .withPersistence().create());
 
-    this.data = data;
+    this.data           = data;
+    this.subscriptionId = subscriptionId;
   }
 
   @Override
@@ -49,9 +56,9 @@ public class MmsReceiveJob extends ContextJob {
       Log.w(TAG, e);
     }
 
-    if (pdu != null && pdu.getMessageType() == PduHeaders.MESSAGE_TYPE_NOTIFICATION_IND) {
+    if (isNotification(pdu) && !isBlocked(pdu)) {
       MmsDatabase database                = DatabaseFactory.getMmsDatabase(context);
-      Pair<Long, Long> messageAndThreadId = database.insertMessageInbox((NotificationInd)pdu);
+      Pair<Long, Long> messageAndThreadId = database.insertMessageInbox((NotificationInd)pdu, subscriptionId);
 
       Log.w(TAG, "Inserted received MMS notification...");
 
@@ -61,6 +68,8 @@ public class MmsReceiveJob extends ContextJob {
                                                 messageAndThreadId.first,
                                                 messageAndThreadId.second,
                                                 true));
+    } else if (isNotification(pdu)) {
+      Log.w(TAG, "*** Received blocked MMS, ignoring...");
     }
   }
 
@@ -72,5 +81,18 @@ public class MmsReceiveJob extends ContextJob {
   @Override
   public boolean onShouldRetry(Exception exception) {
     return false;
+  }
+
+  private boolean isBlocked(GenericPdu pdu) {
+    if (pdu.getFrom() != null && pdu.getFrom().getTextString() != null) {
+      Recipients recipients = RecipientFactory.getRecipientsFromString(context, Util.toIsoString(pdu.getFrom().getTextString()), false);
+      return recipients.isBlocked();
+    }
+
+    return false;
+  }
+
+  private boolean isNotification(GenericPdu pdu) {
+    return pdu != null && pdu.getMessageType() == PduHeaders.MESSAGE_TYPE_NOTIFICATION_IND;
   }
 }
