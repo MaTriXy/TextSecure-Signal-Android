@@ -3,6 +3,9 @@ package org.thoughtcrime.securesms.jobs;
 import android.content.Context;
 import android.util.Log;
 
+import org.greenrobot.eventbus.EventBus;
+import org.thoughtcrime.securesms.ApplicationContext;
+import org.thoughtcrime.securesms.TextSecureExpiredException;
 import org.thoughtcrime.securesms.attachments.Attachment;
 import org.thoughtcrime.securesms.crypto.MasterSecret;
 import org.thoughtcrime.securesms.database.DatabaseFactory;
@@ -12,6 +15,7 @@ import org.thoughtcrime.securesms.jobs.requirements.MasterSecretRequirement;
 import org.thoughtcrime.securesms.mms.PartAuthority;
 import org.thoughtcrime.securesms.notifications.MessageNotifier;
 import org.thoughtcrime.securesms.recipients.Recipients;
+import org.thoughtcrime.securesms.util.TextSecurePreferences;
 import org.thoughtcrime.securesms.util.Util;
 import org.whispersystems.jobqueue.JobParameters;
 import org.whispersystems.jobqueue.requirements.NetworkRequirement;
@@ -26,7 +30,6 @@ import java.io.InputStream;
 import java.util.LinkedList;
 import java.util.List;
 
-import de.greenrobot.event.EventBus;
 import ws.com.google.android.mms.ContentType;
 
 public abstract class PushSendJob extends SendJob {
@@ -48,6 +51,19 @@ public abstract class PushSendJob extends SendJob {
     return builder.create();
   }
 
+  @Override
+  protected final void onSend(MasterSecret masterSecret) throws Exception {
+    if (TextSecurePreferences.getSignedPreKeyFailureCount(context) > 5) {
+      ApplicationContext.getInstance(context)
+                        .getJobManager()
+                        .add(new RotateSignedPreKeyJob(context));
+
+      throw new TextSecureExpiredException("Too many signed prekey rotation failures");
+    }
+
+    onPushSend(masterSecret);
+  }
+
   protected SignalServiceAddress getPushAddress(String number) throws InvalidNumberException {
     String e164number = Util.canonicalizeNumber(context, number);
     String relay      = TextSecureDirectory.getInstance(context).getRelay(e164number);
@@ -58,27 +74,23 @@ public abstract class PushSendJob extends SendJob {
     List<SignalServiceAttachment> attachments = new LinkedList<>();
 
     for (final Attachment attachment : parts) {
-      if (ContentType.isImageType(attachment.getContentType()) ||
-          ContentType.isAudioType(attachment.getContentType()) ||
-          ContentType.isVideoType(attachment.getContentType()))
-      {
-        try {
-          if (attachment.getDataUri() == null) throw new IOException("Assertion failed, outgoing attachment has no data!");
-          InputStream is = PartAuthority.getAttachmentStream(context, masterSecret, attachment.getDataUri());
-          attachments.add(SignalServiceAttachment.newStreamBuilder()
-                                                 .withStream(is)
-                                                 .withContentType(attachment.getContentType())
-                                                 .withLength(attachment.getSize())
-                                                 .withListener(new ProgressListener() {
-                                                   @Override
-                                                   public void onAttachmentProgress(long total, long progress) {
-                                                     EventBus.getDefault().postSticky(new PartProgressEvent(attachment, total, progress));
-                                                   }
-                                                 })
-                                                 .build());
-        } catch (IOException ioe) {
-          Log.w(TAG, "Couldn't open attachment", ioe);
-        }
+      try {
+        if (attachment.getDataUri() == null || attachment.getSize() == 0) throw new IOException("Assertion failed, outgoing attachment has no data!");
+        InputStream is = PartAuthority.getAttachmentStream(context, masterSecret, attachment.getDataUri());
+        attachments.add(SignalServiceAttachment.newStreamBuilder()
+                                               .withStream(is)
+                                               .withContentType(attachment.getContentType())
+                                               .withLength(attachment.getSize())
+                                               .withFileName(attachment.getFileName())
+                                               .withListener(new ProgressListener() {
+                                                 @Override
+                                                 public void onAttachmentProgress(long total, long progress) {
+                                                   EventBus.getDefault().postSticky(new PartProgressEvent(attachment, total, progress));
+                                                 }
+                                               })
+                                               .build());
+      } catch (IOException ioe) {
+        Log.w(TAG, "Couldn't open attachment", ioe);
       }
     }
 
@@ -93,4 +105,6 @@ public abstract class PushSendJob extends SendJob {
       MessageNotifier.notifyMessageDeliveryFailed(context, recipients, threadId);
     }
   }
+
+  protected abstract void onPushSend(MasterSecret masterSecret) throws Exception;
 }

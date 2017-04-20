@@ -21,7 +21,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.preference.PreferenceFragment;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.Toolbar;
-import android.text.TextUtils;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
@@ -55,7 +54,8 @@ public class RecipientPreferenceActivity extends PassphraseRequiredActionBarActi
 {
   private static final String TAG = RecipientPreferenceActivity.class.getSimpleName();
 
-  public static final String RECIPIENTS_EXTRA = "recipient_ids";
+  public static final String RECIPIENTS_EXTRA             = "recipient_ids";
+  public static final String CAN_HAVE_SAFETY_NUMBER_EXTRA = "can_have_safety_number";
 
   private static final String PREFERENCE_MUTED    = "pref_key_recipient_mute";
   private static final String PREFERENCE_TONE     = "pref_key_recipient_ringtone";
@@ -130,6 +130,8 @@ public class RecipientPreferenceActivity extends PassphraseRequiredActionBarActi
 
   private void initializeToolbar() {
     this.toolbar = (Toolbar) findViewById(R.id.toolbar);
+    this.toolbar.setLogo(null);
+
     setSupportActionBar(toolbar);
 
     getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -190,6 +192,7 @@ public class RecipientPreferenceActivity extends PassphraseRequiredActionBarActi
     private Recipients        recipients;
     private BroadcastReceiver staleReceiver;
     private MasterSecret      masterSecret;
+    private boolean           canHaveSafetyNumber;
 
     @Override
     public void onCreate(Bundle icicle) {
@@ -198,7 +201,9 @@ public class RecipientPreferenceActivity extends PassphraseRequiredActionBarActi
       addPreferencesFromResource(R.xml.recipient_preferences);
       initializeRecipients();
 
-      this.masterSecret = getArguments().getParcelable("master_secret");
+      this.masterSecret        = getArguments().getParcelable("master_secret");
+      this.canHaveSafetyNumber = getActivity().getIntent()
+                                 .getBooleanExtra(RecipientPreferenceActivity.CAN_HAVE_SAFETY_NUMBER_EXTRA, false);
 
       this.findPreference(PREFERENCE_TONE)
           .setOnPreferenceChangeListener(new RingtoneChangeListener());
@@ -258,15 +263,21 @@ public class RecipientPreferenceActivity extends PassphraseRequiredActionBarActi
 
       mutePreference.setChecked(recipients.isMuted());
 
-      if (recipients.getRingtone() != null) {
-        Ringtone tone = RingtoneManager.getRingtone(getActivity(), recipients.getRingtone());
+      final Uri toneUri = recipients.getRingtone();
+
+      if (toneUri == null) {
+        ringtonePreference.setSummary(R.string.preferences__default);
+        ringtonePreference.setCurrentRingtone(Settings.System.DEFAULT_NOTIFICATION_URI);
+      } else if (toneUri.toString().isEmpty()) {
+        ringtonePreference.setSummary(R.string.preferences__silent);
+        ringtonePreference.setCurrentRingtone(null);
+      } else {
+        Ringtone tone = RingtoneManager.getRingtone(getActivity(), toneUri);
 
         if (tone != null) {
           ringtonePreference.setSummary(tone.getTitle(getActivity()));
-          ringtonePreference.setCurrentRingtone(recipients.getRingtone());
+          ringtonePreference.setCurrentRingtone(toneUri);
         }
-      } else {
-        ringtonePreference.setSummary(R.string.preferences__default);
       }
 
       if (recipients.getVibrate() == VibrateState.DEFAULT) {
@@ -297,6 +308,9 @@ public class RecipientPreferenceActivity extends PassphraseRequiredActionBarActi
             if (result.isPresent()) {
               if (identityPreference != null) identityPreference.setOnPreferenceClickListener(new IdentityClickedListener(result.get()));
               if (identityPreference != null) identityPreference.setEnabled(true);
+            } else if (canHaveSafetyNumber) {
+              if (identityPreference != null) identityPreference.setSummary(R.string.RecipientPreferenceActivity_available_once_a_message_has_been_sent_or_received);
+              if (identityPreference != null) identityPreference.setEnabled(false);
             } else {
               if (identityPreference != null) getPreferenceScreen().removePreference(identityPreference);
             }
@@ -327,7 +341,7 @@ public class RecipientPreferenceActivity extends PassphraseRequiredActionBarActi
 
         final Uri uri;
 
-        if (TextUtils.isEmpty(value) || Settings.System.DEFAULT_NOTIFICATION_URI.toString().equals(value)) {
+        if (Settings.System.DEFAULT_NOTIFICATION_URI.toString().equals(value)) {
           uri = null;
         } else {
           uri = Uri.parse(value);

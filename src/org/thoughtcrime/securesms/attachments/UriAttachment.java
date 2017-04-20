@@ -1,29 +1,25 @@
 package org.thoughtcrime.securesms.attachments;
 
-import android.content.Context;
 import android.net.Uri;
 import android.support.annotation.NonNull;
-
-import org.thoughtcrime.securesms.crypto.MasterSecret;
-import org.thoughtcrime.securesms.util.MediaUtil;
-import org.whispersystems.libsignal.util.guava.Optional;
-
-import java.io.IOException;
-import java.io.InputStream;
+import android.support.annotation.Nullable;
 
 public class UriAttachment extends Attachment {
 
-  private final @NonNull Uri dataUri;
-  private final @NonNull Uri thumbnailUri;
+  private final @NonNull  Uri dataUri;
+  private final @Nullable Uri thumbnailUri;
 
-  public UriAttachment(@NonNull Uri uri, @NonNull String contentType, int transferState, long size) {
-    this(uri, uri, contentType, transferState, size);
+  public UriAttachment(@NonNull Uri uri, @NonNull String contentType, int transferState, long size,
+                       @Nullable String fileName)
+  {
+    this(uri, uri, contentType, transferState, size, fileName);
   }
 
-  public UriAttachment(@NonNull Uri dataUri, @NonNull Uri thumbnailUri,
-                       @NonNull String contentType, int transferState, long size)
+  public UriAttachment(@NonNull Uri dataUri, @Nullable Uri thumbnailUri,
+                       @NonNull String contentType, int transferState, long size,
+                       @Nullable String fileName)
   {
-    super(contentType, transferState, size, null, null, null);
+    super(contentType, transferState, size, fileName, null, null, null, null);
     this.dataUri      = dataUri;
     this.thumbnailUri = thumbnailUri;
   }
@@ -35,7 +31,7 @@ public class UriAttachment extends Attachment {
   }
 
   @Override
-  @NonNull
+  @Nullable
   public Uri getThumbnailUri() {
     return thumbnailUri;
   }

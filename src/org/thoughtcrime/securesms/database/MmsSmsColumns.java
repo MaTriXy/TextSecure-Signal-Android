@@ -17,6 +17,7 @@ public interface MmsSmsColumns {
   public static final String SUBSCRIPTION_ID          = "subscription_id";
   public static final String EXPIRES_IN               = "expires_in";
   public static final String EXPIRE_STARTED           = "expire_started";
+  public static final String NOTIFIED                 = "notified";
 
   public static class Types {
     protected static final long TOTAL_MASK = 0xFFFFFFFF;
@@ -41,7 +42,8 @@ public interface MmsSmsColumns {
     protected static final long[] OUTGOING_MESSAGE_TYPES = {BASE_OUTBOX_TYPE, BASE_SENT_TYPE,
                                                             BASE_SENDING_TYPE, BASE_SENT_FAILED_TYPE,
                                                             BASE_PENDING_SECURE_SMS_FALLBACK,
-                                                            BASE_PENDING_INSECURE_SMS_FALLBACK};
+                                                            BASE_PENDING_INSECURE_SMS_FALLBACK,
+                                                            OUTGOING_CALL_TYPE};
 
     // Message attributes
     protected static final long MESSAGE_ATTRIBUTE_MASK = 0xE0;
@@ -56,6 +58,7 @@ public interface MmsSmsColumns {
     protected static final long KEY_EXCHANGE_INVALID_VERSION_BIT =  0x800;
     protected static final long KEY_EXCHANGE_BUNDLE_BIT          =  0x400;
     protected static final long KEY_EXCHANGE_IDENTITY_UPDATE_BIT =  0x200;
+    protected static final long KEY_EXCHANGE_CONTENT_FORMAT      =  0x100;
 
     // Secure Message Information
     protected static final long SECURE_MESSAGE_BIT = 0x800000;
@@ -159,6 +162,10 @@ public interface MmsSmsColumns {
 
     public static boolean isBundleKeyExchange(long type) {
       return (type & KEY_EXCHANGE_BUNDLE_BIT) != 0;
+    }
+
+    public static boolean isContentBundleKeyExchange(long type) {
+      return (type & KEY_EXCHANGE_CONTENT_FORMAT) != 0;
     }
 
     public static boolean isIdentityUpdate(long type) {

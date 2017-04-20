@@ -18,11 +18,24 @@
         <item name="android:backgroundDimEnabled">false</item>
     </style>
 
-    <style name="AppCompatAlertDialogStyle" parent="Theme.AppCompat.Light.Dialog.Alert">
-        <item name="colorAccent">@color/textsecure_primary_dark</item>
-        <item name="colorPrimary">@color/textsecure_primary</item>
-        <item name="colorPrimaryDark">@color/textsecure_primary_dark</item>
-        <item name="android:textColorLink">@color/textsecure_primary_dark</item>
+    <style name="AppCompatAlertDialogStyleLight" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <item name="colorAccent">@color/signal_primary_dark</item>
+    </style>
+
+    <style name="AppCompatAlertDialogStyleDark" parent="Theme.AppCompat.Dialog.Alert">
+        <item name="colorAccent">@color/signal_primary</item>
+        <item name="android:textColor">@null</item>
+    </style>
+
+    <style name="AppCompatDialogStyleLight" parent="Theme.AppCompat.Light.Dialog">
+        <item name="colorAccent">@color/signal_primary_dark</item>
+        <item name="android:windowBackground">@drawable/dialog_background</item>
+    </style>
+
+    <style name="AppCompatDialogStyleDark" parent="Theme.AppCompat.Dialog">
+        <item name="colorAccent">@color/signal_primary</item>
+        <item name="android:windowBackground">@drawable/dialog_background</item>
+        <item name="android:textColor">@null</item>
     </style>
 
     <!-- ActionBar styles -->
@@ -223,6 +236,13 @@
            clear out android:textOn and android:textOff, to avoid the default
            text label behavior of the ToggleButton class.) -->
     <style name="InCallCompoundButton" parent="InCallButton">
+        <item name="android:textOn">@null</item>
+        <item name="android:textOff">@null</item>
+    </style>
+
+    <style name="WebRtcCallCompoundButton">
+        <item name="android:layout_height">31dp</item>
+        <item name="android:layout_width">31dp</item>
         <item name="android:textOn">@null</item>
         <item name="android:textOff">@null</item>
     </style>

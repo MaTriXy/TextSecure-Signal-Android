@@ -24,6 +24,7 @@ import android.os.Bundle;
 import android.provider.Telephony;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.annotation.VisibleForTesting;
 import android.telephony.SmsMessage;
 import android.util.Log;
 
@@ -31,7 +32,6 @@ import org.thoughtcrime.securesms.ApplicationContext;
 import org.thoughtcrime.securesms.jobs.SmsReceiveJob;
 import org.thoughtcrime.securesms.util.TextSecurePreferences;
 import org.thoughtcrime.securesms.util.Util;
-import org.thoughtcrime.securesms.util.VisibleForTesting;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -154,6 +154,7 @@ public class SmsListener extends BroadcastReceiver {
     } else if ((intent.getAction().equals(SMS_DELIVERED_ACTION)) ||
                (intent.getAction().equals(SMS_RECEIVED_ACTION)) && isRelevant(context, intent))
     {
+      Log.w("SmsListener", "Constructing SmsReceiveJob...");
       Object[] pdus           = (Object[]) intent.getExtras().get("pdus");
       int      subscriptionId = intent.getExtras().getInt("subscription", -1);
 

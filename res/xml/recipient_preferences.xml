@@ -14,7 +14,7 @@
                         android:key="pref_key_recipient_ringtone"
                         android:title="@string/recipient_preferences__notification_sound"
                         android:ringtoneType="notification"
-                        android:showSilent="false"
+                        android:showSilent="true"
                         android:showDefault="true"
                         android:persistent="false"/>
 
@@ -37,7 +37,7 @@
             app:numColumns="5" />
 
     <Preference android:key="pref_key_recipient_identity"
-                android:title="@string/recipient_preferences__verify_safety_numbers"
+                android:title="@string/recipient_preferences__verify_safety_number"
                 android:persistent="false"
                 android:enabled="false"/>
 

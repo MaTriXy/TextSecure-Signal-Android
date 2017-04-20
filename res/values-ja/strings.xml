@@ -61,8 +61,8 @@
   <!--CallScreen-->
   <string name="CallScreen_Incoming_call">着信</string>
   <!--ConfirmIdentityDialog-->
-  <string name="ConfirmIdentityDialog_the_signature_on_this_key_exchange_is_different">%1$sの安全番号が変わりました。%2$sがSignalをインストールし直しただけかも知れませんが，そうでなければ誰かが会話を傍受しようとしています。</string>
-  <string name="ConfirmIdentityDialog_you_may_wish_to_verify_this_contact">この連絡先の安全番号を確認した方がいいかも知れません。</string>
+  <string name="ConfirmIdentityDialog_your_safety_number_with_s_has_changed">%1$sとの安全番号が変わりました。だれかが通信を傍受しているかも知れませんし，%2$sがSignalを再インストールしただけかも知れません。</string>
+  <string name="ConfirmIdentityDialog_you_may_wish_to_verify_your_safety_number_with_this_contact">この連絡先との安全番号を確認しておいた方がいいかも知れません。</string>
   <string name="ConfirmIdentityDialog_accept">承認</string>
   <!--ContactsDatabase-->
   <string name="ContactsDatabase_message_s">%sにメッセージを送る</string>
@@ -101,7 +101,6 @@
   <string name="ConversationActivity_message_is_empty_exclamation">メッセージが空です。</string>
   <string name="ConversationActivity_group_members">グループメンバー</string>
   <string name="ConversationActivity_group_conversation">グループ会話</string>
-  <string name="ConversationActivity_unnamed_group">グループ（名無し）</string>
   <plurals name="ConversationActivity_d_recipients_in_group">
     <item quantity="other">参加者　%d人</item>
   </plurals>
@@ -116,7 +115,7 @@
   <string name="ConversationActivity_transport_signal">Signal</string>
   <string name="ConversationActivity_lets_switch_to_signal">チャットアプリをSignalに変えましょう。%1$s</string>
   <string name="ConversationActivity_lets_use_this_to_chat">チャット・アプリ『Signal』を使いませんか？ %1$s</string>
-  <string name="ConversationActivity_error_leaving_group">グループ離脱中にエラー...</string>
+  <string name="ConversationActivity_error_leaving_group">グループ離脱エラー</string>
   <string name="ConversationActivity_mms_not_supported_title">MMSには対応していません</string>
   <string name="ConversationActivity_mms_not_supported_message">お使いの端末がMMSに対応していないため、このメッセージは送信できません。</string>
   <string name="ConversationActivity_specify_recipient">連絡先を選択してください</string>
@@ -126,8 +125,12 @@
   <string name="ConversationActivity_attachment_exceeds_size_limits">添付ファイルのサイズが上限を超えています</string>
   <string name="ConversationActivity_quick_camera_unavailable">カメラが使えません</string>
   <string name="ConversationActivity_unable_to_record_audio">録音できません！</string>
-  <string name="ConversationActivity_error_sending_voice_message">音声メッセージの送信中にエラー発生...</string>
+  <string name="ConversationActivity_error_sending_voice_message">音声メッセージの送信エラー</string>
   <string name="ConversationActivity_there_is_no_app_available_to_handle_this_link_on_your_device">このリンクを扱えるアプリがインストールされていません</string>
+  <!--ConversationAdapter-->
+  <plurals name="ConversationAdapter_n_unread_messages">
+    <item quantity="other">%d通の未読メッセージ</item>
+  </plurals>
   <!--ConversationFragment-->
   <string name="ConversationFragment_message_details">メッセージの詳細</string>
   <string name="ConversationFragment_transport_s_sent_received_s">送信方法: %1$s\n送信/受信: %2$s</string>
@@ -145,7 +148,9 @@
   <plurals name="ConversationFragment_error_while_saving_attachments_to_sd_card">
     <item quantity="other">添付ファイルを外部メモリに保存する際にエラー発生！</item>
   </plurals>
-  <string name="ConversationFragment_file_saved_successfully">ファイルの保存完了</string>
+  <plurals name="ConversationFragment_files_saved_successfully">
+    <item quantity="other">ファイルが保存されました</item>
+  </plurals>
   <string name="ConversationFragment_unable_to_write_to_sd_card_exclamation">外部メモリに書き込めませんでした</string>
   <plurals name="ConversationFragment_saving_n_attachments">
     <item quantity="other">%1$d個の添付ファイルを保存</item>
@@ -180,7 +185,7 @@
     <item quantity="other">%d個の会話を受信ボックスに移動</item>
   </plurals>
   <!--ConversationListItem-->
-  <string name="ConversationListItem_key_exchange_message">鍵交換のメッセージ…</string>
+  <string name="ConversationListItem_key_exchange_message">鍵交換のメッセージ</string>
   <!--ConversationListItemAction-->
   <string name="ConversationListItemAction_archived_conversations_d">アーカイブ済みの会話 (%d)</string>
   <!--CustomDefaultPreference-->
@@ -188,12 +193,14 @@
   <string name="CustomDefaultPreference_using_default">デフォルト利用: %s</string>
   <string name="CustomDefaultPreference_none">なし</string>
   <!--DateUtils-->
-  <string name="DateUtils_now">いま</string>
+  <string name="DateUtils_just_now">つい先ほど</string>
   <string name="DateUtils_minutes_ago">%d分</string>
+  <string name="DateUtils_today">今日</string>
+  <string name="DateUtils_yesterday">昨日</string>
   <!--DeviceListActivity-->
   <string name="DeviceListActivity_unlink_s">「%s」を切り離しますか？</string>
   <string name="DeviceListActivity_by_unlinking_this_device_it_will_no_longer_be_able_to_send_or_receive">このデバイスを切り離すとメッセージの送受信ができなくなります。</string>
-  <string name="DeviceListActivity_network_connection_failed">ネットワーク接続に失敗...</string>
+  <string name="DeviceListActivity_network_connection_failed">ネットワーク接続に失敗</string>
   <string name="DeviceListActivity_try_again">再試行</string>
   <string name="DeviceListActivity_unlinking_device">デバイスを切り離す...</string>
   <string name="DeviceListActivity_unlinking_device_no_ellipsis">デバイスを切り離す</string>
@@ -203,6 +210,10 @@
   <string name="DeviceListItem_linked_s">%sを結び付けました</string>
   <string name="DeviceListItem_last_active_s">最終活動 %s</string>
   <string name="DeviceListItem_today">今日</string>
+  <!--DocumentView-->
+  <!--DozeReminder-->
+  <string name="DozeReminder_optimize_for_missing_play_services">欠けているGoogle Play開発者サービスに最適化する</string>
+  <string name="DozeReminder_this_device_does_not_support_play_services_tap_to_disable_system_battery">この端末はGoogle Play開発者サービスをサポートしていません。タップして，休眠中の通信を止めるバッテリー最適化機能を切ってください。</string>
   <!--ShareActivity-->
   <string name="ShareActivity_share_with">共有</string>
   <!--ExperienceUpgradeActivity-->
@@ -211,6 +222,10 @@
   <string name="ExperienceUpgradeActivity_welcome_to_signal_excited">Signalにようこそ！</string>
   <string name="ExperienceUpgradeActivity_textsecure_is_now_signal">TextSecureはSignalに生まれ変わりました</string>
   <string name="ExperienceUpgradeActivity_textsecure_is_now_signal_long">TextSecureとRedPhoneは１つのアプリ「Signal」になりました。タップすると詳細が分かります。</string>
+  <string name="ExperienceUpgradeActivity_say_hello_to_video_calls">安全なビデオ通話へようこそ！</string>
+  <string name="ExperienceUpgradeActivity_signal_now_supports_secure_video_calls">安全なビデオ通話が可能になりました。通常通りに通話を開始してから，動画ボタンを押してください。</string>
+  <string name="ExperienceUpgradeActivity_signal_now_supports_secure_video_calling">安全なビデオ通話が可能になりました</string>
+  <string name="ExperienceUpgradeActivity_signal_now_supports_secure_video_calling_long">安全なビデオ通話が可能になりました。試すにはタップしてください。</string>
   <!--ExportFragment-->
   <string name="ExportFragment_export">エクスポート</string>
   <string name="ExportFragment_export_plaintext_to_storage">テキストを外部メディアにエクスポートしますか？</string>
@@ -225,22 +240,22 @@
   <string name="GcmRefreshJob_Permanent_Signal_communication_failure">永続的障害の発生！</string>
   <string name="GcmRefreshJob_Signal_was_unable_to_register_with_Google_Play_Services">Google Playに登録できないためSignalは利用できません。「詳細設定」で再登録してください。</string>
   <!--GiphyActivity-->
-  <string name="GiphyActivity_error_while_retrieving_full_resolution_gif">高解像度GIFファイルの取得中にエラー発生</string>
+  <string name="GiphyActivity_error_while_retrieving_full_resolution_gif">GIFファイルの取り込みでエラー</string>
   <!--GiphyFragmentPageAdapter-->
   <string name="GiphyFragmentPagerAdapter_gifs">GIF</string>
   <string name="GiphyFragmentPagerAdapter_stickers">ステッカー</string>
   <!--GroupCreateActivity-->
   <string name="GroupCreateActivity_actionbar_title">新規グループ</string>
-  <string name="GroupCreateActivity_actionbar_update_title">グループを更新する</string>
+  <string name="GroupCreateActivity_actionbar_edit_title">グループを編集する</string>
   <string name="GroupCreateActivity_group_name_hint">グループ名</string>
   <string name="GroupCreateActivity_actionbar_mms_title">新規MMSグループ</string>
   <string name="GroupCreateActivity_contacts_dont_support_push">Signalユーザーでない人がいるため、このグループはMMSとなります。</string>
   <string name="GroupCreateActivity_youre_not_registered_for_signal">Signalに未登録なのでグループを利用できません。「詳細設定」で登録してください。</string>
   <string name="GroupCreateActivity_contacts_mms_exception">予期せぬエラーが発生したため、グループ作成に失敗しました。</string>
-  <string name="GroupCreateActivity_contacts_no_members">グループには誰か１人は必要です！</string>
+  <string name="GroupCreateActivity_contacts_no_members">グループには最低でも１人は必要です！</string>
   <string name="GroupCreateActivity_contacts_invalid_number">グループのメンバーで電話番号が正しくない人がいます。番号を修正するか、そのメンバーを削除してからやり直してください。</string>
   <string name="GroupCreateActivity_avatar_content_description">グループアバター</string>
-  <string name="GroupCreateActivity_menu_create_title">グループ作成</string>
+  <string name="GroupCreateActivity_menu_apply_button">適用する</string>
   <string name="GroupCreateActivity_creating_group">%1$sを作成中...</string>
   <string name="GroupCreateActivity_updating_group">%1$sを更新...</string>
   <string name="GroupCreateActivity_cannot_add_non_push_to_existing_group">Signalユーザーでないので%1$sを加えることはできません</string>
@@ -295,11 +310,14 @@
   <string name="KeyScanningActivity_this_application_requires_barcode_scanner_would_you_like_to_install_it">QRコードを読み取るにはコードリーダーが必要です</string>
   <!--MessageDetailsRecipient-->
   <string name="MessageDetailsRecipient_failed_to_send">送信失敗</string>
-  <string name="MessageDetailsRecipient_new_safety_numbers">新しい安全番号</string>
+  <string name="MessageDetailsRecipient_new_safety_number">新しい安全番号</string>
+  <!--MessageRetrievalService-->
+  <string name="MessageRetrievalService_signal">Signal</string>
+  <string name="MessageRetrievalService_background_connection_enabled">バックグラウンド通信が有効</string>
   <!--MmsDownloader-->
   <string name="MmsDownloader_error_storing_mms">MMS保存中にエラーがありました。</string>
-  <string name="MmsDownloader_error_connecting_to_mms_provider">MMSのプロバイダー接続中にエラーが発生しました…</string>
-  <string name="MmsDownloader_error_reading_mms_settings">携帯電話回線のMMS設定が見つかりませんでした。</string>
+  <string name="MmsDownloader_error_connecting_to_mms_provider">MMSプロバイダへの接続でエラー</string>
+  <string name="MmsDownloader_error_reading_mms_settings">無線プロバイダのMMS設定の読み込みでエラー</string>
   <!--- NotificationBarManager-->
   <string name="NotificationBarManager_signal_call_in_progress">通話準備中</string>
   <string name="NotificationBarManager_missed_call_from_s">%sからの通話に失敗</string>
@@ -312,17 +330,20 @@
   <string name="NotificationBarManager__cancel_call">キャンセル</string>
   <!--NotificationMmsMessageRecord-->
   <string name="NotificationMmsMessageRecord_multimedia_message">マルチメディアメッセージ</string>
+  <string name="NotificationMmsMessageRecord_downloading_mms_message">MMSメッセージを取得中</string>
+  <string name="NotificationMmsMessageRecord_error_downloading_mms_message">MMSメッセージの取得中にエラーが発生しました。タップして再試行してください。</string>
   <!--MessageRecord-->
   <string name="MessageRecord_message_encrypted_with_a_legacy_protocol_version_that_is_no_longer_supported">受信したメッセージは古いSignalで暗号化されているので解読不能です。Signalを最新版にして再送するよう送信者にお願いしてください。</string>
   <string name="MessageRecord_left_group">グループを抜けました</string>
-  <string name="MessageRecord_updated_group">グループを更新しました</string>
+  <string name="MessageRecord_you_updated_group">グループが更新されました</string>
+  <string name="MessageRecord_s_updated_group">%s がグループを更新しました</string>
   <string name="MessageRecord_s_called_you">%sから着信</string>
   <string name="MessageRecord_called_s">%sに発信</string>
   <string name="MessageRecord_missed_call_from">%sから不在着信</string>
-  <string name="MessageRecord_s_is_on_signal_say_hey">%sがSignalにいるので声を掛ける</string>
+  <string name="MessageRecord_s_joined_signal">%s が Signal に登録しました!</string>
   <string name="MessageRecord_you_set_disappearing_message_time_to_s">メッセージの消去時間を%1$sに設定しました</string>
   <string name="MessageRecord_s_set_disappearing_message_time_to_s">%1$sがメッセージの消去時間を%2$sに設定しました</string>
-  <string name="MessageRecord_your_safety_numbers_with_s_have_changed">%sとの安全番号が変わりました</string>
+  <string name="MessageRecord_your_safety_number_with_s_has_changed">%sとの安全番号が変わりました</string>
   <!--PassphraseChangeActivity-->
   <string name="PassphraseChangeActivity_passphrases_dont_match_exclamation">パスワードが正しくありません！</string>
   <string name="PassphraseChangeActivity_incorrect_old_passphrase_exclamation">古いパスワードが正しくありません。</string>
@@ -341,7 +362,7 @@
   <string name="DeviceProvisioningActivity_content_progress_no_device">デバイスがありません</string>
   <string name="DeviceProvisioningActivity_content_progress_network_error">ネットワークエラー</string>
   <string name="DeviceProvisioningActivity_content_progress_key_error">QRコードが正しくありません</string>
-  <string name="DeviceProvisioningActivity_sorry_you_have_too_many_devices_linked_already">結び付けているデバイスが多すぎます。どれかを切り離してください。</string>
+  <string name="DeviceProvisioningActivity_sorry_you_have_too_many_devices_linked_already">登録している端末が多すぎます。いくつか削除してください。</string>
   <string name="DeviceActivity_sorry_this_is_not_a_valid_device_link_qr_code">このQRコードは正しいリンクではありません</string>
   <string name="DeviceProvisioningActivity_link_a_signal_device">デバイスを結び付けますか？</string>
   <string name="DeviceProvisioningActivity_it_looks_like_youre_trying_to_link_a_signal_device_using_a_3rd_party_scanner">アプリ外のスキャナーを使ってデバイスを結び付けようとしていますが、安全のためSignal内からコードをスキャンしてください。</string>
@@ -372,6 +393,9 @@
   <string name="RecipientPreferenceActivity_unblock">ブロック解除</string>
   <string name="RecipientPreferenceActivity_enabled">有効</string>
   <string name="RecipientPreferenceActivity_disabled">無効</string>
+  <string name="RecipientPreferenceActivity_available_once_a_message_has_been_sent_or_received">メッセージが１つでも送信または受信されると利用可能になります</string>
+  <!--RecipientProvider-->
+  <string name="RecipientProvider_unnamed_group">名無しのグループ</string>
   <!--RedPhone-->
   <string name="RedPhone_answering">応答中</string>
   <string name="RedPhone_ending_call">通話終了</string>
@@ -400,19 +424,24 @@
   <string name="RegistrationActivity_you_must_specify_your_phone_number">電話番号を入力して下さい</string>
   <string name="RegistrationActivity_invalid_number">無効な番号</string>
   <string name="RegistrationActivity_the_number_you_specified_s_is_invalid">指定された番号(%s)はお使いできません。</string>
-  <string name="RegistrationActivity_unsupported">使用不可能</string>
-  <string name="RegistrationActivity_sorry_this_device_is_not_supported_for_data_messaging">申し訳ありませんが、 データメッセージの送信はお使いのデバイスではできません。アンドロイドのバージョンが4.0より古い場合、グーグルアカウントに登録する必要があります。バージョンが4.0以降の場合はグーグルアカウントへの登録は不要ですが、Google Playのアプリをインストールする必要があります。</string>
   <string name="RegistrationActivity_we_will_now_verify_that_the_following_number_is_associated_with_your_device_s">この番号で正しいか確認してください。このあとSMSを使って番号の確認を行います。
     </string>
   <string name="RegistrationActivity_continue">続行</string>
   <string name="RegistrationActivity_edit">編集</string>
+  <string name="RegistrationActivity_missing_google_play_services">Google Play開発者サービスがありません</string>
+  <string name="RegistrationActivity_this_device_is_missing_google_play_services">この端末にはGoogle Play開発者サービスがありません。Signalは使用できますが，信頼性や性能は下がる可能性があります。\n\n 上級者でない人や，メーカー公式のAndroidを使っている人，何かの間違いだと思う人などはsupport@whispersystems.orgまで連絡してください。</string>
+  <string name="RegistrationActivity_i_understand">分かりました</string>
+  <string name="RegistrationActivity_play_services_error">Google Play開発者サービスのエラー</string>
+  <string name="RegistrationActivity_google_play_services_is_updating_or_unavailable">Google Play開発者サービスは更新中か一時的に使用不能です。再度試してください。</string>
+  <string name="RegistrationActivity_more_information">もっと見る</string>
+  <string name="RegistrationActivity_less_information">詳細を隠す</string>
   <!--RegistrationProblemsActivity-->
   <string name="RegistrationProblemsActivity_possible_problems">可能性のある原因</string>
   <!--RegistrationProgressActivity-->
   <string name="RegistrationProgressActivity_verifying_number">番号を確認中...</string>
   <string name="RegistrationProgressActivity_edit_s">%sを編集</string>
   <string name="RegistrationProgressActivity_registration_complete">登録完了！</string>
-  <string name="RegistrationProgressActivity_you_must_enter_the_code_you_received_first">まず、もらったコードを入力して下さい</string>
+  <string name="RegistrationProgressActivity_you_must_enter_the_code_you_received_first">受け取ったコードを入力する必要があります</string>
   <string name="RegistrationProgressActivity_connecting">接続中</string>
   <string name="RegistrationProgressActivity_connecting_for_verification">確認するために接続中...</string>
   <string name="RegistrationProgressActivity_network_error">ネットワークエラー！</string>
@@ -428,7 +457,7 @@
   <string name="RegistrationProgressActivity_too_many_requests">リクエストが多すぎます</string>
   <string name="RegistrationProgressActivity_youve_already_requested_a_voice_call">検証用の通話はすでに申請済みです。再申請は20分待たなければ出来ません。</string>
   <string name="RegistrationProgressActivity_registration_conflict">登録不一致</string>
-  <string name="RegistrationProgressActivity_this_number_is_already_registered_on_a_different">この番号は既にSignalの別のサーバーに登録されています。そこでの登録を解除してから再度試してください。</string>
+  <string name="RegistrationProgressActivity_this_number_is_already_registered_on_a_different">この番号はすでに別のサーバーで登録されています。再登録するには一度登録を削除する必要があります。</string>
   <!--RegistrationService-->
   <string name="RegistrationService_registration_complete">登録完了</string>
   <string name="RegistrationService_signal_registration_has_successfully_completed">登録が完了しました</string>
@@ -441,36 +470,40 @@
   <!--SmsMessageRecord-->
   <string name="SmsMessageRecord_received_corrupted_key_exchange_message">無効な鍵交換メッセージを受信しました</string>
   <string name="SmsMessageRecord_received_key_exchange_message_for_invalid_protocol_version">受信した鍵交換メッセージのプロトコルバージョンが無効です</string>
-  <string name="SmsMessageRecord_received_message_with_new_safety_numbers_tap_to_process">未知の安全番号付きのメッセージを受け取りました。タップして確認してください。</string>
+  <string name="SmsMessageRecord_received_message_with_new_safety_number_tap_to_process">新しい安全番号が付いたメッセージを受け取りました。処理や表示を行うにはタップしてください。</string>
   <string name="SmsMessageRecord_secure_session_reset">安全な接触を設定し直しました</string>
   <string name="SmsMessageRecord_secure_session_reset_s">%sが安全な接触を設定し直しました。</string>
   <string name="SmsMessageRecord_duplicate_message">重複メッセージ</string>
   <!--ThreadRecord-->
-  <string name="ThreadRecord_left_the_group">グループを抜けました...</string>
+  <string name="ThreadRecord_group_updated">グループが更新されました</string>
+  <string name="ThreadRecord_left_the_group">グループを抜けました</string>
   <string name="ThreadRecord_secure_session_reset">安全なセッションがリセットされました</string>
   <string name="ThreadRecord_draft">下書き:</string>
   <string name="ThreadRecord_called">発信しました</string>
   <string name="ThreadRecord_called_you">着信がありました</string>
   <string name="ThreadRecord_missed_call">不在着信がありました</string>
   <string name="ThreadRecord_media_message">メディアでのメッセージ</string>
-  <string name="ThreadRecord_s_is_on_signal_say_hey">%sがSignalにいるので声を掛ける</string>
+  <string name="ThreadRecord_s_joined_signal">%s が Signal に登録しました！</string>
   <string name="ThreadRecord_disappearing_message_time_updated_to_s">メッセージの消去時間が%sに設定されました</string>
-  <string name="ThreadRecord_your_safety_numbers_with_s_have_changed">%sとの安全番号が変わりました</string>
+  <string name="ThreadRecord_your_safety_number_with_s_has_changed">%sとの安全番号が変わりました</string>
+  <!--UpdateApkReadyListener-->
+  <string name="UpdateApkReadyListener_Signal_update">Signalを更新する</string>
+  <string name="UpdateApkReadyListener_a_new_version_of_signal_is_available_tap_to_update">Signalの最新版が出ました。タップして更新してください。</string>
   <!--VerifyIdentityActivity-->
-  <string name="VerifyIdentityActivity_your_contact_is_running_an_old_version_of_signal">相手先は古いバージョンのSignalを使っています。最新版に更新するようお願いしてください。</string>
+  <string name="VerifyIdentityActivity_your_contact_is_running_an_old_version_of_signal">相手は古いSignalを使っています。Signalを更新してから安全番号の確認を行うようお願いしてください。</string>
   <string name="VerifyIdentityActivity_your_contact_is_running_a_newer_version_of_Signal">相手が使っているSignalのバージョンが新しいため，QRコードの形式が異なります。Signalを更新してから改めて比較してください。</string>
-  <string name="VerifyIdentityActivity_you_re_attempting_to_verify_safety_numbers_with">%1$sのコードを読み取るつもりが，%2$sのコードを読み取っています。</string>
-  <string name="VerifyIdentityActivity_the_scanned_qr_code_is_not_a_correctly_formatted_safety_number">読み取ったQRコードは安全番号のコードとは違うようです。QRコードを読み取り直してください。</string>
-  <string name="VerifyIdentityActivity_share_safety_numbers_via">安全番号を共有しています……</string>
-  <string name="VerifyIdentityActivity_our_signal_safety_numbers">安全番号は</string>
+  <string name="VerifyIdentityActivity_the_scanned_qr_code_is_not_a_correctly_formatted_safety_number">読み取ったQRコードは正当な安全番号ではありません。もう一度読み取って下さい。</string>
+  <string name="VerifyIdentityActivity_share_safety_number_via">安全番号の共有を以下の方法で行う</string>
+  <string name="VerifyIdentityActivity_our_signal_safety_number">私たちの安全番号は：</string>
   <string name="VerifyIdentityActivity_no_app_to_share_to">シェアするためのアプリがないようです。</string>
+  <string name="VerifyIdentityActivity_no_safety_number_to_compare_was_found_in_the_clipboard">クリップボードに安全番号がみつかりませんでした。</string>
   <!--KeyExchangeInitiator-->
   <string name="KeyExchangeInitiator_initiate_despite_existing_request_question">既存のリクエストがありますが、鍵交換を開始しますか？</string>
   <string name="KeyExchangeInitiator_send">送信</string>
   <!--MessageDisplayHelper-->
-  <string name="MessageDisplayHelper_bad_encrypted_message">メッセージが正しく暗号化されていません…</string>
+  <string name="MessageDisplayHelper_bad_encrypted_message">メッセージの暗号化が正しくありません</string>
   <string name="MessageDisplayHelper_decrypting_please_wait">復号しています。お待ち下さい…</string>
-  <string name="MessageDisplayHelper_message_encrypted_for_non_existing_session">メッセージは存在しないセッションのために暗号化されています…</string>
+  <string name="MessageDisplayHelper_message_encrypted_for_non_existing_session">存在しない相手に向けてメッセージが暗号化されています</string>
   <!--EncryptingSmsDatabase-->
   <string name="EncryptingSmsDatabase_error_decrypting_message">メッセージ復号化でエラー</string>
   <!--ThreadDatabase-->
@@ -481,11 +514,11 @@
   <string name="MmsDatabase_mms_download_failed">MMSのダウンロード失敗！</string>
   <string name="MmsDatabase_downloading">ダウンロード中…</string>
   <string name="MmsDatabase_mms_pending_download">ダウンロードを続行するのに、MMS設定を行って下さい。</string>
-  <string name="MmsDatabase_error_decrypting_message">メッセージ復号化でエラー</string>
+  <string name="MmsDatabase_error_decrypting_message">メッセージ復号化エラー</string>
   <!--MmsMessageRecord-->
   <string name="MmsMessageRecord_decrypting_mms_please_wait">MMSを復号しています。お待ち下さい…</string>
-  <string name="MmsMessageRecord_bad_encrypted_mms_message">MMSメッセージが正しく暗号化されていません…</string>
-  <string name="MmsMessageRecord_mms_message_encrypted_for_non_existing_session">MMSメッセージは存在しないセッションのために暗号化されています…</string>
+  <string name="MmsMessageRecord_bad_encrypted_mms_message">MMSメッセージの暗号化が正しくありません</string>
+  <string name="MmsMessageRecord_mms_message_encrypted_for_non_existing_session">存在しない相手に向けてMMSメッセージが暗号化されています</string>
   <!--MuteDialog-->
   <string name="MuteDialog_mute_notifications">消音通知</string>
   <!--ApplicationMigrationService-->
@@ -498,10 +531,15 @@
   <string name="KeyCachingService_signal_passphrase_cached_with_lock">タッチして開くか、鍵をタッチして閉じる</string>
   <string name="KeyCachingService_passphrase_cached">Signalのロック解除</string>
   <string name="KeyCachingService_lock">パスワードでロックする</string>
+  <!--MediaPreviewActivity-->
+  <string name="MediaPreviewActivity_you">あなた</string>
+  <string name="MediaPreviewActivity_cant_display">この画像のプレビューに失敗</string>
+  <string name="MediaPreviewActivity_unssuported_media_type">サポートされないメディア種別</string>
+  <string name="MediaPreviewActivity_draft">下書き</string>
   <!--MessageNotifier-->
   <string name="MessageNotifier_d_new_messages_in_d_conversations">%2$d個の会話に%1$d個の新着メッセージ</string>
   <string name="MessageNotifier_most_recent_from_s">最新の受信: %1$s</string>
-  <string name="MessageNotifier_locked_message">メッセージをロック...</string>
+  <string name="MessageNotifier_locked_message">ロックされたメッセージ</string>
   <string name="MessageNotifier_media_message_with_text">メディアメッセージ: %s</string>
   <string name="MessageNotifier_no_subject">（無題）</string>
   <string name="MessageNotifier_message_delivery_failed">メッセージの配信に失敗しました。</string>
@@ -511,19 +549,44 @@
   <string name="MessageNotifier_mark_read">既読にする</string>
   <string name="MessageNotifier_media_message">メディアメッセージ</string>
   <string name="MessageNotifier_reply">返信</string>
+  <!--MmsPreferencesFragment-->
+  <string name="MmsPreferencesFragment__manual_mms_settings_are_required">この電話ではMMSの設定を手動で行う必要があります</string>
+  <string name="MmsPreferencesFragment__enabled">有効</string>
+  <string name="MmsPreferencesFragment__disabled">無効</string>
+  <string name="MmsPreferencesFragment__not_set">設定なし</string>
+  <string name="MmsPreferencesFragment__invalid_uri">入力されたURIは正しくありません</string>
+  <string name="MmsPreferencesFragment__invalid_host">入力されたホストは正しくありません</string>
   <!--QuickResponseService-->
   <string name="QuickResponseService_quick_response_unavailable_when_Signal_is_locked">Signalのロック中はクイック・レスポンスは使えません</string>
   <string name="QuickResponseService_problem_sending_message">メッセージ送信で問題発生</string>
+  <!--SaveAttachmentTask-->
   <!--SingleRecipientNotificationBuilder-->
   <string name="SingleRecipientNotificationBuilder_signal">Signal</string>
   <string name="SingleRecipientNotificationBuilder_new_message">新規メッセージ</string>
+  <!--VideoPlayer-->
+  <string name="VideoPlayer_error_playing_video">動画再生にエラー</string>
+  <!--WebRtcCallScreen-->
+  <string name="WebRtcCallScreen_new_safety_numbers">%1$sとの会話の安全番号に変更があります。誰かが通信を傍受している可能性もありますし，%2$sがSignalを再インストールしただけかも知れません。</string>
+  <string name="WebRtcCallScreen_you_may_wish_to_verify_this_contact">この連絡先との安全番号を確認しておいた方がいいかも知れません。</string>
+  <string name="WebRtcCallScreen_new_safety_number_title">新しい安全番号</string>
+  <!--WebRtcCallControls-->
+  <string name="WebRtcCallControls_tap_to_enable_your_video">タップして動画を有効する</string>
   <!--attachment_type_selector-->
   <string name="attachment_type_selector__image">画像</string>
+  <string name="attachment_type_selector__image_description">画像</string>
   <string name="attachment_type_selector__audio">音声</string>
+  <string name="attachment_type_selector__audio_description">音声</string>
   <string name="attachment_type_selector__video">動画</string>
+  <string name="attachment_type_selector__video_description">動画</string>
   <string name="attachment_type_selector__contact">連絡先</string>
+  <string name="attachment_type_selector__contact_description">連絡先</string>
   <string name="attachment_type_selector__camera">カメラ</string>
+  <string name="attachment_type_selector__camera_description">カメラ</string>
   <string name="attachment_type_selector__location">場所</string>
+  <string name="attachment_type_selector__location_description">場所</string>
+  <string name="attachment_type_selector__gif">GIF</string>
+  <string name="attachment_type_selector__gif_description">Gif</string>
+  <string name="attachment_type_selector__drawer_description">添付引出しを切り替える</string>
   <!--change_passphrase_activity-->
   <string name="change_passphrase_activity__old_passphrase">既存のパスワード</string>
   <string name="change_passphrase_activity__new_passphrase">新しいパスワード</string>
@@ -538,15 +601,12 @@
   <!--ContactSelectionListFragment-->
   <string name="ContactSelectionlistFragment_select_for">選択</string>
   <!--blocked_contacts_fragment-->
-  <string name="blocked_contacts_fragment__no_blocked_contacts">ブロックしている連絡先はありません...</string>
+  <string name="blocked_contacts_fragment__no_blocked_contacts">ブロックしている連絡先はありません</string>
   <!--contact_selection_recent_activity-->
   <string name="contact_selection_recent_activity__no_recent_calls">最近の通話はありません。</string>
   <!--conversation_title_view-->
   <string name="conversation_title_view__conversation_muted">会話を消音</string>
   <!--conversation_activity-->
-  <string name="conversation_activity__type_message_push">プッシュ送信</string>
-  <string name="conversation_activity__type_message_sms_insecure">SMSを送信（通信安全性は確保されません）</string>
-  <string name="conversation_activity__type_message_mms_insecure">MMSを送信（通信安全性は確保されません）</string>
   <string name="conversation_activity__from_sim_name">%1$sから</string>
   <string name="conversation_activity__send">送信</string>
   <string name="conversation_activity__remove">削除</string>
@@ -554,7 +614,9 @@
   <string name="conversation_activity__compose_description">メッセージ新規作成</string>
   <string name="conversation_activity__emoji_toggle_description">絵文字キーボードの切替</string>
   <string name="conversation_activity__attachment_thumbnail">添付のサムネイル</string>
-  <string name="conversation_activity__quick_attachment_drawer_toggle_description">添付ドロワーのトグル</string>
+  <string name="conversation_activity__quick_attachment_drawer_toggle_camera_description">カメラ添付の引出しを素速く切り替える</string>
+  <string name="conversation_activity__quick_attachment_drawer_record_and_send_audio_description">音声を録音して送信する</string>
+  <string name="conversation_activity__enable_signal_for_sms">SignalでSMSができるようにする</string>
   <!--conversation_input_panel-->
   <string name="conversation_input_panel__slide_to_cancel">スライドしてキャンセル</string>
   <!--conversation_item-->
@@ -571,9 +633,15 @@
   <string name="conversation_item_received__download">ダウンロード</string>
   <string name="conversation_item_received__contact_photo_description">連絡先の写真</string>
   <string name="conversation_item_received__downloading">ダウンロード中</string>
+  <!--audio_view-->
+  <string name="audio_view__play_accessibility_description">再生</string>
+  <string name="audio_view__pause_accessibility_description">一時停止</string>
+  <string name="audio_view__download_accessibility_description">ダウンロード</string>
   <!--conversation_fragment_cab-->
   <string name="conversation_fragment_cab__batch_selection_mode">一括選択モード</string>
   <string name="conversation_fragment_cab__batch_selection_amount">選択数は%s</string>
+  <!--conversation_fragment-->
+  <string name="conversation_fragment__scroll_to_the_bottom_content_description">最後までスクロール</string>
   <!--country_selection_fragment-->
   <string name="country_selection_fragment__loading_countries">国名を読み込み中...</string>
   <string name="country_selection_fragment__search">検索</string>
@@ -582,7 +650,7 @@
   <!--device_link_fragment-->
   <string name="device_link_fragment__link_device">デバイスを結び付ける</string>
   <!--device_list_fragment-->
-  <string name="device_list_fragment__no_devices_linked">結び付いているデバイスはありません...</string>
+  <string name="device_list_fragment__no_devices_linked">登録している端末はありません</string>
   <string name="device_list_fragment__link_new_device">結び付けるデバイスを追加</string>
   <!--experience_upgrade_activity-->
   <string name="experience_upgrade_activity__continue">続ける</string>
@@ -612,6 +680,9 @@
   <string name="giphy_activity_toolbar__search_gifs_and_stickers">GIFやステッカーを検索</string>
   <!--giphy_fragment-->
   <string name="giphy_fragment__nothing_found">何も見つかりませんでした</string>
+  <!--import_export_fragment-->
+  <string name="import_export_fragment__export">エクスポート</string>
+  <string name="import_export_fragment__import">インポート</string>
   <!--log_submit_activity-->
   <string name="log_submit_activity__log_fetch_failed">デバイス上のログを読めません。ただしADBを使ってデバッグログを読むことはできます。</string>
   <string name="log_submit_activity__thanks">提出どうもありがとうございます！</string>
@@ -638,22 +709,15 @@
   <!--load_more_header-->
   <string name="load_more_header__see_full_conversation">会話全体を見る</string>
   <!--media_overview_activity-->
-  <string name="media_overview_activity__no_images">画像なし</string>
+  <string name="media_overview_activity__no_media">メディアがありません</string>
   <!--message_recipients_list_item-->
   <string name="message_recipients_list_item__verify">確認</string>
   <string name="message_recipients_list_item__resend">再送</string>
-  <!--MmsPreferencesFragment-->
-  <string name="MmsPreferencesFragment__manual_mms_settings_are_required">この電話ではMMSの設定を手動で行う必要があります</string>
-  <string name="MmsPreferencesFragment__enabled">有効</string>
-  <string name="MmsPreferencesFragment__disabled">無効</string>
-  <string name="MmsPreferencesFragment__not_set">設定なし</string>
-  <string name="MmsPreferencesFragment__invalid_uri">入力されたURIは正しくありません</string>
-  <string name="MmsPreferencesFragment__invalid_host">入力されたホストは正しくありません</string>
+  <string name="message_recipients_list_item__resending">再送中...</string>
   <!--GroupUtil-->
   <plurals name="GroupUtil_joined_the_group">
     <item quantity="other">%1$sがグループに加わりました</item>
   </plurals>
-  <string name="GroupUtil_group_updated">グループ更新</string>
   <string name="GroupUtil_group_name_is_now">グループ名が「%1$s」になりました</string>
   <!--prompt_passphrase_activity-->
   <string name="prompt_passphrase_activity__unlock">ロック解除</string>
@@ -670,7 +734,7 @@
   <string name="recipient_preferences__block">ブロック</string>
   <string name="recipient_preferences__color">色</string>
   <string name="recipient_preferences__color_for_this_contact">この連絡先の色</string>
-  <string name="recipient_preferences__verify_safety_numbers">安全番号の確認</string>
+  <string name="recipient_preferences__verify_safety_number">安全番号を確認する</string>
   <!--- redphone_call_controls-->
   <string name="redphone_call_card__signal_call">Signal通話</string>
   <string name="redphone_call_controls__end_call">通話を終了</string>
@@ -683,7 +747,7 @@
   <string name="registration_activity__your_country_code_and_phone_number">あなたの国番号と電話番号</string>
   <string name="registration_activity__phone_number">電話番号</string>
   <string name="registration_activity__register">登録</string>
-  <string name="registration_activity__registration_will_transmit_some_contact_information_to_the_server_temporariliy">登録すると連絡先情報の一部がサーバーに送られますが、保存はしません。</string>
+  <string name="registration_activity__registration_will_transmit_some_contact_information_to_the_server_temporariliy">Signalはあなたの連絡先の電話番号を利用して、より簡単なコミュニケーションを提供します。たとえば、あなたの友達が初めてSignalに登録した際、友達の連絡先にあなたの電話番号があると、友達があなたを簡単に見つけることが出来ます。\n\n登録の際、一部のデータがサーバーに送信されますが、これらのデータは保存されません。</string>
   <string name="registration_activity__powered_by_twilio">Powered by twilio</string>
   <!--registration_problems-->
   <string name="registration_problems__some_possible_problems_include">いくつかの問題の可能性があります
@@ -722,10 +786,10 @@
   <string name="recipients_panel__to"><small>名前または番号を入力して下さい</small></string>
   <string name="recipients_panel__add_members">メンバーを追加</string>
   <!--verify_display_fragment-->
-  <string name="verify_display_fragment__scan_the_code_on_your_contact_s_phone_or_ask_them_to_scan_your_code_to_verify_that_your_messages_are_end_to_end_encrypted_you_can_alternately_compare_the_number_above"><![CDATA[%sとの端末間の暗号化が完全かどうかを確認するには，上記の番号と相手方に表示されている番号を比べてください。あるいは，相手方の端末上のQRコードを読み取るか，こちらのQRコードを相手に読み取ってもらってください。<a href=\"https://whispersystems.org/redirect/safety-numbers\">安全番号の確認についての詳細</a>.]]></string>
+  <string name="verify_display_fragment__if_you_wish_to_verify_the_security_of_your_end_to_end_encryption_with_s"><![CDATA[%sとの端末間の暗号化を確認するには，上記の番号と相手の端末上の番号を比べてください。あるいは，相手端末上のQRコードを読み取るか，上のQRコードを相手に読み取ってもらってください。<a href="https://whispersystems.org/redirect/safety-numbers">安全番号の確認についての詳細</a>]]></string>
   <string name="verify_display_fragment__tap_to_scan">読み取る</string>
   <!--verify_identity-->
-  <string name="verify_identity__share_safety_numbers">安全番号を共有する</string>
+  <string name="verify_identity__share_safety_number">安全番号を共有する</string>
   <!--message_details_header-->
   <string name="message_details_header__issues_need_your_attention">問題があります</string>
   <string name="message_details_header__sent">送信</string>
@@ -741,11 +805,11 @@
   <string name="AndroidManifest__select_contacts">連絡先を選択</string>
   <string name="AndroidManifest__signal_detected">Signalが検出されました</string>
   <string name="AndroidManifest__change_passphrase">パスワード変更</string>
-  <string name="AndroidManifest__verify_safety_numbers">安全番号の確認</string>
+  <string name="AndroidManifest__verify_safety_number">安全番号を確認する</string>
   <string name="AndroidManifest__log_submit">デバッグログを提出</string>
   <string name="AndroidManifest__media_preview">メディアのプレビュー</string>
-  <string name="AndroidManifest__media_overview">すべての画像</string>
-  <string name="AndroidManifest__media_overview_named">%1$sとの画像</string>
+  <string name="AndroidManifest__all_media">すべてのメディア</string>
+  <string name="AndroidManifest__all_media_named">%1$sとのメディア</string>
   <string name="AndroidManifest__message_details">メッセージ詳細</string>
   <string name="AndroidManifest__linked_devices">結び付いているデバイス</string>
   <string name="AndroidManifest__invite_friends">友達にオススメする</string>
@@ -768,6 +832,8 @@
   <string name="arrays__images">画像</string>
   <string name="arrays__audio">音声</string>
   <string name="arrays__video">動画</string>
+  <string name="arrays__documents">文書</string>
+  <string name="arrays__normal">普通</string>
   <!--plurals.xml-->
   <plurals name="hours_ago">
     <item quantity="other">%d時間前</item>
@@ -808,7 +874,6 @@
   <string name="preferences__pref_led_blink_custom_pattern_off_for">消灯時間:</string>
   <string name="preferences__pref_led_blink_custom_pattern_set">オリジナルのLED点滅パターンが設定されました！</string>
   <string name="preferences__sound">着信音</string>
-  <string name="preferences__change_notification_sound">通知音を変更</string>
   <string name="preferences__silent">無音</string>
   <string name="preferences__in_conversation_notifications">チャット中の通知</string>
   <string name="preferences__play_inthread_notifications">チャットを表示している間も通知音を出す</string>
@@ -877,6 +942,10 @@
   <string name="preferences_chats__message_trimming">メッセージの整理</string>
   <string name="preferences_advanced__use_system_emoji">システムの絵文字を使う</string>
   <string name="preferences_advanced__disable_signal_built_in_emoji_support">Signal独自の絵文字機能を無効にする</string>
+  <string name="preferences_advanced__video_calling_beta">テレビ電話（β版）</string>
+  <string name="preferences_advanced__enable_support_for_next_generation_video_and_voice_calls">次世代のビデオ音声通話を有効にする（相手も有効にした場合）。この機能はβ版です。</string>
+  <string name="preferences_advanced__relay_all_calls_through_the_signal_server_to_avoid_revealing_your_ip_address">すべての通話をSignalサーバーに中継して，IPアドレスが相手に漏れることを防ぐ。ただし通話の質は下がります。</string>
+  <string name="preferences_advanced__always_relay_calls">いつも中継する</string>
   <!--****************************************-->
   <!--menus-->
   <!--****************************************-->
@@ -931,10 +1000,10 @@
   <string name="conversation_unmuted__mute_notifications">無音通知</string>
   <!--conversation-->
   <string name="conversation__menu_add_attachment">添付</string>
-  <string name="conversation__menu_update_group">グループを更新する</string>
+  <string name="conversation__menu_edit_group">グループを編集する</string>
   <string name="conversation__menu_leave_group">グループを抜ける</string>
   <string name="conversation__menu_delete_thread">会話を削除</string>
-  <string name="conversation__menu_view_media">すべての画像</string>
+  <string name="conversation__menu_view_all_media">すべてのメディア</string>
   <string name="conversation__menu_conversation_settings">会話の設定</string>
   <!--conversation_popup-->
   <string name="conversation_popup__menu_expand_popup">ポップアップを拡大</string>
@@ -957,6 +1026,9 @@
   <string name="text_secure_normal__mark_all_as_read">すべて既読にする</string>
   <string name="text_secure_normal__invite_friends">友達にオススメする</string>
   <string name="text_secure_normal__help">ヘルプ</string>
+  <!--verify_display_fragment-->
+  <string name="verify_display_fragment_context_menu__copy_to_clipboard">クリップボードにコピーする</string>
+  <string name="verify_display_fragment_context_menu__compare_with_clipboard">クリップボードと比較する</string>
   <!--reminder_header-->
   <string name="reminder_header_outdated_build">Signalのバージョンが古すぎます</string>
   <plurals name="reminder_header_outdated_build_details">
@@ -982,17 +1054,14 @@
   <string name="reminder_header_share_text">Signalが周囲に広まると便利ですよ</string>
   <string name="reminder_header_share_button">シェア</string>
   <string name="reminder_header_close_button">閉じる</string>
-  <!--MediaPreviewActivity-->
-  <string name="MediaPreviewActivity_you">あなた</string>
-  <string name="MediaPreviewActivity_cant_display">この画像のプレビューに失敗</string>
-  <string name="MediaPreviewActivity_unssuported_media_type">サポートされないメディア種別</string>
   <!--media_preview-->
   <string name="media_preview__save_title">保存</string>
   <string name="media_preview__forward_title">早送り</string>
+  <string name="media_preview__all_media_title">すべてのメディア</string>
   <!--media_overview-->
   <string name="media_overview__save_all">すべて保存</string>
   <!--media_preview_activity-->
-  <string name="media_preview_activity__image_content_description">画像のプレビュー</string>
+  <string name="media_preview_activity__media_content_description">メディアのプレビュー</string>
   <!--new_conversation_activity-->
   <string name="new_conversation_activity__refresh">更新</string>
   <!--redphone_audio_popup_menu-->

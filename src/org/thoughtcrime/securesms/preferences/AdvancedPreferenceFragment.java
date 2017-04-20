@@ -19,20 +19,16 @@ import android.widget.Toast;
 
 import com.google.android.gms.gcm.GoogleCloudMessaging;
 
-import org.thoughtcrime.redphone.signaling.RedPhoneAccountManager;
-import org.thoughtcrime.redphone.signaling.RedPhoneTrustStore;
-import org.thoughtcrime.redphone.signaling.UnauthorizedException;
 import org.thoughtcrime.securesms.ApplicationPreferencesActivity;
-import org.thoughtcrime.securesms.BuildConfig;
 import org.thoughtcrime.securesms.LogSubmitActivity;
 import org.thoughtcrime.securesms.R;
 import org.thoughtcrime.securesms.RegistrationActivity;
 import org.thoughtcrime.securesms.contacts.ContactAccessor;
 import org.thoughtcrime.securesms.contacts.ContactIdentityManager;
 import org.thoughtcrime.securesms.crypto.MasterSecret;
-import org.thoughtcrime.securesms.push.TextSecureCommunicationFactory;
-import org.thoughtcrime.securesms.util.task.ProgressDialogAsyncTask;
+import org.thoughtcrime.securesms.push.AccountManagerFactory;
 import org.thoughtcrime.securesms.util.TextSecurePreferences;
+import org.thoughtcrime.securesms.util.task.ProgressDialogAsyncTask;
 import org.whispersystems.libsignal.util.guava.Optional;
 import org.whispersystems.signalservice.api.SignalServiceAccountManager;
 import org.whispersystems.signalservice.api.push.exceptions.AuthorizationFailedException;
@@ -187,12 +183,8 @@ public class AdvancedPreferenceFragment extends PreferenceFragment {
       @Override
       protected Integer doInBackground(Void... params) {
         try {
-          Context                     context                = getActivity();
-          SignalServiceAccountManager accountManager         = TextSecureCommunicationFactory.createManager(context);
-          RedPhoneAccountManager      redPhoneAccountManager = new RedPhoneAccountManager(BuildConfig.REDPHONE_MASTER_URL,
-                                                                                          new RedPhoneTrustStore(context),
-                                                                                          TextSecurePreferences.getLocalNumber(context),
-                                                                                          TextSecurePreferences.getPushServerPassword(context));
+          Context                     context        = getActivity();
+          SignalServiceAccountManager accountManager = AccountManagerFactory.createManager(context);
 
           try {
             accountManager.setGcmId(Optional.<String>absent());
@@ -200,13 +192,9 @@ public class AdvancedPreferenceFragment extends PreferenceFragment {
             Log.w(TAG, e);
           }
 
-          try {
-            redPhoneAccountManager.setGcmId(Optional.<String>absent());
-          } catch (UnauthorizedException e) {
-            Log.w(TAG, e);
+          if (!TextSecurePreferences.isGcmDisabled(context)) {
+            GoogleCloudMessaging.getInstance(context).unregister();
           }
-
-          GoogleCloudMessaging.getInstance(context).unregister();
 
           return SUCCESS;
         } catch (IOException ioe) {

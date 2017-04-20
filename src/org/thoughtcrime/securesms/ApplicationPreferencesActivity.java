@@ -26,11 +26,13 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.preference.PreferenceFragment;
+import android.view.View;
 
 import org.thoughtcrime.securesms.crypto.MasterSecret;
 import org.thoughtcrime.securesms.preferences.AdvancedPreferenceFragment;
 import org.thoughtcrime.securesms.preferences.AppProtectionPreferenceFragment;
 import org.thoughtcrime.securesms.preferences.AppearancePreferenceFragment;
+import org.thoughtcrime.securesms.preferences.CorrectedPreferenceFragment;
 import org.thoughtcrime.securesms.preferences.NotificationsPreferenceFragment;
 import org.thoughtcrime.securesms.preferences.SmsMmsPreferenceFragment;
 import org.thoughtcrime.securesms.preferences.ChatsPreferenceFragment;
@@ -121,7 +123,8 @@ public class ApplicationPreferencesActivity extends PassphraseRequiredActionBarA
     }
   }
 
-  public static class ApplicationPreferenceFragment extends PreferenceFragment {
+  public static class ApplicationPreferenceFragment extends CorrectedPreferenceFragment {
+
     @Override
     public void onCreate(Bundle icicle) {
       super.onCreate(icicle);
@@ -149,6 +152,7 @@ public class ApplicationPreferencesActivity extends PassphraseRequiredActionBarA
       super.onResume();
       ((ApplicationPreferencesActivity) getActivity()).getSupportActionBar().setTitle(R.string.text_secure_normal__menu_settings);
       setCategorySummaries();
+      setCategoryVisibility();
     }
 
     private void setCategorySummaries() {
@@ -162,6 +166,13 @@ public class ApplicationPreferencesActivity extends PassphraseRequiredActionBarA
           .setSummary(AppearancePreferenceFragment.getSummary(getActivity()));
       this.findPreference(PREFERENCE_CATEGORY_CHATS)
           .setSummary(ChatsPreferenceFragment.getSummary(getActivity()));
+    }
+
+    private void setCategoryVisibility() {
+      Preference devicePreference = this.findPreference(PREFERENCE_CATEGORY_DEVICES);
+      if (devicePreference != null && !TextSecurePreferences.isPushRegistered(getActivity())) {
+        getPreferenceScreen().removePreference(devicePreference);
+      }
     }
 
     private class CategoryClickListener implements Preference.OnPreferenceClickListener {

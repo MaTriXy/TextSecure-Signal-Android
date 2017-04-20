@@ -64,10 +64,7 @@
   <!--CallScreen-->
   <string name="CallScreen_Incoming_call">Sarrerako dei</string>
   <!--ConfirmIdentityDialog-->
-  <string name="ConfirmIdentityDialog_the_signature_on_this_key_exchange_is_different">%1$s-en segurtasun zenbakiak aldatu dira. Hau adierazi dezake norbait zure komunikazioa eragozten saiatzen ari dela edo %2$s-k Signal aplikazioa berrinstalatu duela.</string>
-  <string name="ConfirmIdentityDialog_you_may_wish_to_verify_this_contact">Agian, egiaztatu nahi izango duzu
-        kontaktu honen segurtasun zenbakiak.
-    </string>
+  <string name="ConfirmIdentityDialog_you_may_wish_to_verify_your_safety_number_with_this_contact">Agian zure segurasun zenbakia kontatu honekin baieztatu nahi duzu.</string>
   <string name="ConfirmIdentityDialog_accept">Onartu</string>
   <!--ContactsDatabase-->
   <string name="ContactsDatabase_message_s">Mezu %s</string>
@@ -106,7 +103,6 @@
   <string name="ConversationActivity_message_is_empty_exclamation">Mezua hutsik dago!</string>
   <string name="ConversationActivity_group_members">Taldeko partaideak</string>
   <string name="ConversationActivity_group_conversation">Taldeko solasaldia</string>
-  <string name="ConversationActivity_unnamed_group">Izenik gabeko taldea</string>
   <plurals name="ConversationActivity_d_recipients_in_group">
     <item quantity="one">Partaide 1</item>
     <item quantity="other">%d partaide</item>
@@ -122,7 +118,7 @@
   <string name="ConversationActivity_transport_signal">Signal</string>
   <string name="ConversationActivity_lets_switch_to_signal">Signalera aldatu dezagun %1$s</string>
   <string name="ConversationActivity_lets_use_this_to_chat">Erabili dezagun hau txatarako: %1$s</string>
-  <string name="ConversationActivity_error_leaving_group">Errorea taldea uzterakoan...</string>
+  <string name="ConversationActivity_error_leaving_group">Taldetik irteterakoan huts egin du</string>
   <string name="ConversationActivity_mms_not_supported_title">MMS ez daude onartuta</string>
   <string name="ConversationActivity_mms_not_supported_message">Mezu hau ezin da bidali zure hornitzaileak MMS onartzen ez duelako.</string>
   <string name="ConversationActivity_specify_recipient">Kontaktu bat aukeratu, mesedez</string>
@@ -132,8 +128,13 @@
   <string name="ConversationActivity_attachment_exceeds_size_limits">Eranskina handiegia da bidaltzen ari zaren mezu motarako.</string>
   <string name="ConversationActivity_quick_camera_unavailable">Kamera ez dago eskuragarri</string>
   <string name="ConversationActivity_unable_to_record_audio">Ezgai audioa grabatzeko!</string>
-  <string name="ConversationActivity_error_sending_voice_message">Errorea ahots-mezua bidaltzean...</string>
+  <string name="ConversationActivity_error_sending_voice_message">Ahots mezua bidaltzerakoan huts egin du</string>
   <string name="ConversationActivity_there_is_no_app_available_to_handle_this_link_on_your_device">Ez dago erabil daitekeen aplikaziorik lotura hau tratatzeko zure gailuan.</string>
+  <!--ConversationAdapter-->
+  <plurals name="ConversationAdapter_n_unread_messages">
+    <item quantity="one">%d mezu irakurri gabe</item>
+    <item quantity="other">%d mezuak irakurri gabe</item>
+  </plurals>
   <!--ConversationFragment-->
   <string name="ConversationFragment_message_details">Mezuaren detaileak</string>
   <string name="ConversationFragment_transport_s_sent_received_s">Garraioa: %1$s\nBidalita/Jasota: %2$s</string>
@@ -156,7 +157,10 @@
     <item quantity="one">Errorea eranskina biltegian gordetzerakoan!</item>
     <item quantity="other">Errorea eranskinak biltegian gordetzerakoan!</item>
   </plurals>
-  <string name="ConversationFragment_file_saved_successfully">Fitxategia ondo gorde da.</string>
+  <plurals name="ConversationFragment_files_saved_successfully">
+    <item quantity="one">Fitxategia ondo gorde da.</item>
+    <item quantity="other">Fitxategiak ondo gorde dira.</item>
+  </plurals>
   <string name="ConversationFragment_unable_to_write_to_sd_card_exclamation">Ezgai biltegian idazteko!</string>
   <plurals name="ConversationFragment_saving_n_attachments">
     <item quantity="one">Eranskina gordetzen</item>
@@ -174,7 +178,7 @@
   <string name="ConversationFragment_deleting">Ezabatzen</string>
   <string name="ConversationFragment_deleting_messages">Mezuak ezabatzen...</string>
   <!--ConversationListActivity-->
-  <string name="ConversationListActivity_search">Bilatu...</string>
+  <string name="ConversationListActivity_search">Bilatu</string>
   <string name="ConversationListActivity_there_is_no_browser_installed_on_your_device">Ez dago nabigatzaile instalaturik zure gailuan.</string>
   <!--ConversationListFragment-->
   <plurals name="ConversationListFragment_delete_selected_conversations">
@@ -197,7 +201,6 @@
     <item quantity="other">%d solasaldi mugitu dira sarrera-ontzira</item>
   </plurals>
   <!--ConversationListItem-->
-  <string name="ConversationListItem_key_exchange_message">Gakoaren datu-trukerako mezua...</string>
   <!--ConversationListItemAction-->
   <string name="ConversationListItemAction_archived_conversations_d">Artxibatutako elkarrizketak (%d)</string>
   <!--CustomDefaultPreference-->
@@ -205,12 +208,14 @@
   <string name="CustomDefaultPreference_using_default">Lehenetsia: %s</string>
   <string name="CustomDefaultPreference_none">Bat ere ez</string>
   <!--DateUtils-->
-  <string name="DateUtils_now">Orain</string>
+  <string name="DateUtils_just_now">Momentu honetan</string>
   <string name="DateUtils_minutes_ago">%d min</string>
+  <string name="DateUtils_today">Gaur</string>
+  <string name="DateUtils_yesterday">Atzo</string>
   <!--DeviceListActivity-->
   <string name="DeviceListActivity_unlink_s">\'%s\'-rekin lotura ezabatu?</string>
   <string name="DeviceListActivity_by_unlinking_this_device_it_will_no_longer_be_able_to_send_or_receive">Gailu hau desparekatu ondoren ezin ditzakezu mezuak bidal eta jaso.</string>
-  <string name="DeviceListActivity_network_connection_failed">Sare-konexioak huts egin du...</string>
+  <string name="DeviceListActivity_network_connection_failed">Internetera konektatzen huts egin du</string>
   <string name="DeviceListActivity_try_again">Saiatu berriro</string>
   <string name="DeviceListActivity_unlinking_device">Gailuarekin lotura ezabatzen...</string>
   <string name="DeviceListActivity_unlinking_device_no_ellipsis">Gailuarekin lotura ezabatzen</string>
@@ -220,6 +225,8 @@
   <string name="DeviceListItem_linked_s">%s lotuta</string>
   <string name="DeviceListItem_last_active_s">Azken konexioa: %s</string>
   <string name="DeviceListItem_today">Gaur</string>
+  <!--DocumentView-->
+  <!--DozeReminder-->
   <!--ShareActivity-->
   <string name="ShareActivity_share_with">Norekin konpartitu</string>
   <!--ExperienceUpgradeActivity-->
@@ -247,7 +254,7 @@
   <string name="GiphyFragmentPagerAdapter_stickers">Eranskailuak</string>
   <!--GroupCreateActivity-->
   <string name="GroupCreateActivity_actionbar_title">Talde berria</string>
-  <string name="GroupCreateActivity_actionbar_update_title">Taldea eguneratu</string>
+  <string name="GroupCreateActivity_actionbar_edit_title">Taldea editatu</string>
   <string name="GroupCreateActivity_group_name_hint">Taldearen izena</string>
   <string name="GroupCreateActivity_actionbar_mms_title">MMS talde berria</string>
   <string name="GroupCreateActivity_contacts_dont_support_push">Signal taldeak onartzen ez duen kontaktu bat aukeratu duzu; beraz, talde hau MMS izango da.</string>
@@ -256,7 +263,7 @@
   <string name="GroupCreateActivity_contacts_no_members">Gutxienez pertsona bat behar duzu zure taldean!</string>
   <string name="GroupCreateActivity_contacts_invalid_number">Zure taldeko partaide batek ondo irakurri ezin daitekeen zenbaki bat dauka. Konpondu edo ezabatu kontaktua eta saiatu berriro mesedez.</string>
   <string name="GroupCreateActivity_avatar_content_description">Taldearen abatarra</string>
-  <string name="GroupCreateActivity_menu_create_title">Taldea sortu</string>
+  <string name="GroupCreateActivity_menu_apply_button">Aplikatu</string>
   <string name="GroupCreateActivity_creating_group">Sortzen %1$s...</string>
   <string name="GroupCreateActivity_updating_group">Eguneratzen: %1$s...</string>
   <string name="GroupCreateActivity_cannot_add_non_push_to_existing_group">Ezin izan da %1$s gehitu Signal erabiltzailea ez delako.</string>
@@ -305,7 +312,7 @@ Babeskopia hau lehenago inportatu baduzu, mezu bikoiztuak sor daitezke.
   <string name="InviteActivity_invite_to_signal">Gonbidatu Signal erabiltzera</string>
   <plurals name="InviteActivity_send_sms_to_friends">
     <item quantity="one">BIDALI SMS MEZUA LAGUN BATI</item>
-    <item quantity="other">BIDALI SMS MEZUA %d LAGUNERI</item>
+    <item quantity="other">BIDALI SMS MEZUA %d LAGUNI</item>
   </plurals>
   <plurals name="InviteActivity_send_sms_invites">
     <item quantity="one">Bidali SMS bidezko gonbidapena?</item>
@@ -320,11 +327,11 @@ Babeskopia hau lehenago inportatu baduzu, mezu bikoiztuak sor daitezke.
   <string name="KeyScanningActivity_this_application_requires_barcode_scanner_would_you_like_to_install_it">Signalek Barcode Scanner aplikazioa behar du QR kodeak irakurtzeko.</string>
   <!--MessageDetailsRecipient-->
   <string name="MessageDetailsRecipient_failed_to_send">Bidalketak huts egin du</string>
-  <string name="MessageDetailsRecipient_new_safety_numbers">Segurtasun zenbaki berriak</string>
+  <string name="MessageDetailsRecipient_new_safety_number">Segurtasun zenbaki berria</string>
+  <!--MessageRetrievalService-->
+  <string name="MessageRetrievalService_signal">Signal</string>
   <!--MmsDownloader-->
   <string name="MmsDownloader_error_storing_mms">Errorea MMS gordetzen!</string>
-  <string name="MmsDownloader_error_connecting_to_mms_provider">Errorea MMS hornitzailearekin konentatzerakoan...</string>
-  <string name="MmsDownloader_error_reading_mms_settings">Errorea hari-gabeko hornitzailearen MMS ezarpenak irakurtzen...</string>
   <!--- NotificationBarManager-->
   <string name="NotificationBarManager_signal_call_in_progress">Uneko Signal deia</string>
   <string name="NotificationBarManager_missed_call_from_s">%s-en erantzun gabeko deia</string>
@@ -337,15 +344,16 @@ Babeskopia hau lehenago inportatu baduzu, mezu bikoiztuak sor daitezke.
   <string name="NotificationBarManager__cancel_call">Deia utzi</string>
   <!--NotificationMmsMessageRecord-->
   <string name="NotificationMmsMessageRecord_multimedia_message">Multimedia mezua</string>
+  <string name="NotificationMmsMessageRecord_downloading_mms_message">MMS mezu berria deskargatzen</string>
   <!--MessageRecord-->
   <string name="MessageRecord_message_encrypted_with_a_legacy_protocol_version_that_is_no_longer_supported">Signal bertsio zaharregitik jaso da mezu zifratua.  Eskatu igorleari birbidaltzeko mesedez bere Signal egiaztatu ondoren.</string>
   <string name="MessageRecord_left_group">Taldea utzi duzu.</string>
-  <string name="MessageRecord_updated_group">Taldea eguneratuta.</string>
   <string name="MessageRecord_s_called_you">%s-(e)k deitu dizu</string>
   <string name="MessageRecord_called_s">%s-(e)ri deitu duzu</string>
   <string name="MessageRecord_missed_call_from">%s-en erantzun gabeko deia</string>
-  <string name="MessageRecord_s_is_on_signal_say_hey">%s-(e)k Signal dauka, agur egin!</string>
-  <string name="MessageRecord_your_safety_numbers_with_s_have_changed">Zure %s-ekin segurtasun zenbakiak aldatu dira.</string>
+  <string name="MessageRecord_you_set_disappearing_message_time_to_s">Desagertzen diren mezuen debora %1$s-tan ezarrita</string>
+  <string name="MessageRecord_s_set_disappearing_message_time_to_s">Desagertzen diren mezuen debora %2$s-tan ezarri du %1$s-k</string>
+  <string name="MessageRecord_your_safety_number_with_s_has_changed">Zure segurtasun zenbakia %s aldatu da.</string>
   <!--PassphraseChangeActivity-->
   <string name="PassphraseChangeActivity_passphrases_dont_match_exclamation">Pasahitzak ez datoz bat!</string>
   <string name="PassphraseChangeActivity_incorrect_old_passphrase_exclamation">Pasahitz zahar ez zuzena!</string>
@@ -366,7 +374,6 @@ Babeskopia hau lehenago inportatu baduzu, mezu bikoiztuak sor daitezke.
   <string name="DeviceProvisioningActivity_content_progress_no_device">Ez da gailurik aurkitu.</string>
   <string name="DeviceProvisioningActivity_content_progress_network_error">Sare errorea.</string>
   <string name="DeviceProvisioningActivity_content_progress_key_error">Baliogabeko QR kodea.</string>
-  <string name="DeviceProvisioningActivity_sorry_you_have_too_many_devices_linked_already">Barkatu, konektatutako gailu gehiegi dauzkazu jadanik, kendu batzuk...</string>
   <string name="DeviceActivity_sorry_this_is_not_a_valid_device_link_qr_code">Barkatu, hau ez da gailua lotzeko baliozko QR kodea.</string>
   <string name="DeviceProvisioningActivity_link_a_signal_device">Lotu Signal gailu bat?</string>
   <string name="DeviceProvisioningActivity_it_looks_like_youre_trying_to_link_a_signal_device_using_a_3rd_party_scanner">Signalez kanpoko eskaner batez parekatzen omen duzu Signal gailu bat.  Zure segurtasunerako, eskaneatu kodea Signaletik mesedez.</string>
@@ -397,6 +404,8 @@ Babeskopia hau lehenago inportatu baduzu, mezu bikoiztuak sor daitezke.
   <string name="RecipientPreferenceActivity_unblock">Desblokeatu</string>
   <string name="RecipientPreferenceActivity_enabled">Aktibatuta</string>
   <string name="RecipientPreferenceActivity_disabled">Desaktibatuta</string>
+  <!--RecipientProvider-->
+  <string name="RecipientProvider_unnamed_group">Izenik gabeko taldea</string>
   <!--RedPhone-->
   <string name="RedPhone_answering">Deia erantzuten</string>
   <string name="RedPhone_ending_call">Deia amaitzen</string>
@@ -431,20 +440,18 @@ zehaztu behar duzu
   <string name="RegistrationActivity_the_number_you_specified_s_is_invalid">Zehaztu duzun 
 zenbakia (%s) baliogabea da.
 </string>
-  <string name="RegistrationActivity_unsupported">Ez onartua</string>
-  <string name="RegistrationActivity_sorry_this_device_is_not_supported_for_data_messaging">Sentitzen dugu,
-baina gailu honek ez dago onartuta datuen bidezko mezulararitzarako. Android 4.0 bertsioa baino zaharragoa duten gailuek Google Kontu bat izan behar dute. 
-Android 4.0 edo berriagoa badute, ez da beharrezkoa Google Kontu bat izatea, baina Play Store-eko aplikakzioa instalatuta eduki behar da.</string>
   <string name="RegistrationActivity_we_will_now_verify_that_the_following_number_is_associated_with_your_device_s">Egiaztatu hau dela zure zenbakia!  SMS bidez egiaztatzear gaude.</string>
   <string name="RegistrationActivity_continue">Jarraitu</string>
   <string name="RegistrationActivity_edit">Editatu</string>
+  <string name="RegistrationActivity_missing_google_play_services">Ez dira topatzen Google Play-ren zerbitzuak </string>
+  <string name="RegistrationActivity_i_understand">Ulertzen dut</string>
+  <string name="RegistrationActivity_more_information">Informazio gehiago</string>
   <!--RegistrationProblemsActivity-->
   <string name="RegistrationProblemsActivity_possible_problems">Aurreikusi daitezkeen arazoak</string>
   <!--RegistrationProgressActivity-->
   <string name="RegistrationProgressActivity_verifying_number">Zenbakia egiaztatzen</string>
   <string name="RegistrationProgressActivity_edit_s">Editatu %s</string>
   <string name="RegistrationProgressActivity_registration_complete">Erregistratzea osatuta!</string>
-  <string name="RegistrationProgressActivity_you_must_enter_the_code_you_received_first">Lehenago jaso duzun kodea sartu behar duzu...</string>
   <string name="RegistrationProgressActivity_connecting">Konektatzen</string>
   <string name="RegistrationProgressActivity_connecting_for_verification">Egiaztatzeko konektatzen...</string>
   <string name="RegistrationProgressActivity_network_error">Sareko errorea!</string>
@@ -460,7 +467,6 @@ Android 4.0 edo berriagoa badute, ez da beharrezkoa Google Kontu bat izatea, bai
   <string name="RegistrationProgressActivity_too_many_requests">Eskaera gehiegi!</string>
   <string name="RegistrationProgressActivity_youve_already_requested_a_voice_call">Duela gutxi ahotsezko dei bat eskatu duzu. Beste bat eska dezakezu 20 minutu barru.</string>
   <string name="RegistrationProgressActivity_registration_conflict">Erregistratze gatazka</string>
-  <string name="RegistrationProgressActivity_this_number_is_already_registered_on_a_different">Zenbaki hori badago beste Signal zerbitzari batean (CyanogenMod?).  Hartik bazkidetza kendu behar duzu Signal zerbitzarian izena eman aurretik.</string>
   <!--RegistrationService-->
   <string name="RegistrationService_registration_complete">Erregistratzea osatuta</string>
   <string name="RegistrationService_signal_registration_has_successfully_completed">Signalen erregistratzea arrakastaz osatu da.</string>
@@ -477,33 +483,31 @@ Android 4.0 edo berriagoa badute, ez da beharrezkoa Google Kontu bat izatea, bai
   <string name="SmsMessageRecord_received_key_exchange_message_for_invalid_protocol_version">
 Gakoaren elkar-trukeraro mezua jaso da protokoloaren bertsio baliogabe baterako.
 </string>
-  <string name="SmsMessageRecord_received_message_with_new_safety_numbers_tap_to_process">Segurtasun mezu berriekin jaso da mezua. Ukitu prozesatzeko eta erakusteko.</string>
   <string name="SmsMessageRecord_secure_session_reset">Saio segurua berrezarri duzu.</string>
   <string name="SmsMessageRecord_secure_session_reset_s">%s berrezarri saio segurua.</string>
   <string name="SmsMessageRecord_duplicate_message">Mezu bikoiztua.</string>
   <!--ThreadRecord-->
-  <string name="ThreadRecord_left_the_group">Taldea utzita...</string>
+  <string name="ThreadRecord_group_updated">Taldea eguneratu da</string>
+  <string name="ThreadRecord_left_the_group">Taldea utzi duzu</string>
   <string name="ThreadRecord_secure_session_reset">Saio segurua berrezarri da.</string>
   <string name="ThreadRecord_draft">Zirriborroa:</string>
   <string name="ThreadRecord_called">Deitu duzu</string>
   <string name="ThreadRecord_called_you">Deitu dizu</string>
   <string name="ThreadRecord_missed_call">Erantzun gabeko deia</string>
   <string name="ThreadRecord_media_message">Multimedia mezua</string>
-  <string name="ThreadRecord_s_is_on_signal_say_hey">%s-(e)k Signal dauka, agur egin!</string>
   <string name="ThreadRecord_disappearing_message_time_updated_to_s">Desagertzen diren mezuen debora %s-tan ezarrita</string>
-  <string name="ThreadRecord_your_safety_numbers_with_s_have_changed">Zure %s-ekin segurtasun zenbakiak aldatu dira</string>
+  <string name="ThreadRecord_your_safety_number_with_s_has_changed">Zure segurtasun zenbakia %s aldatu da.</string>
+  <!--UpdateApkReadyListener-->
+  <string name="UpdateApkReadyListener_Signal_update">Signal eguneratu</string>
+  <string name="UpdateApkReadyListener_a_new_version_of_signal_is_available_tap_to_update">Signalaren bertsio berria dago, sakatu eguneratzeko</string>
   <!--VerifyIdentityActivity-->
-  <string name="VerifyIdentityActivity_your_contact_is_running_an_old_version_of_signal">Zure kontaktua Signal aplikazioaren bertsio zahar bat erabiltzan ari da, mesedez eskatuiozu eguneratzeko segurtasun zenbakiak egiaztatu aurretik.</string>
-  <string name="VerifyIdentityActivity_you_re_attempting_to_verify_safety_numbers_with">%1$s-ekin segurtasun zenbakiak egiaztatzen saiatzen ari zara baina %2$s eskaneatu duzu ordea.</string>
-  <string name="VerifyIdentityActivity_the_scanned_qr_code_is_not_a_correctly_formatted_safety_number">Eskaneatutako QR kodearen formatua ez da segurtasun zenbaki egiaztapen kode batena. Mesedez saiatu berriro eskaneatzen.</string>
+  <string name="VerifyIdentityActivity_your_contact_is_running_a_newer_version_of_Signal">Zure kontaktua Signal aplikazioaren bertsio berriago bat erabiltzen ari da eta horrek QR kode formatua eguneratu du. Eguneratu konparazioa egiteko.</string>
   <string name="VerifyIdentityActivity_no_app_to_share_to">Dirudienez ez duzu partekatzeko aplikazio bakar bat ere.</string>
   <!--KeyExchangeInitiator-->
   <string name="KeyExchangeInitiator_initiate_despite_existing_request_question">Hasi nahiz eta beste eskaera bat indarrean egon?</string>
   <string name="KeyExchangeInitiator_send">Bidali</string>
   <!--MessageDisplayHelper-->
-  <string name="MessageDisplayHelper_bad_encrypted_message">Mezua gaizki zifratu da...</string>
   <string name="MessageDisplayHelper_decrypting_please_wait">Deszifratzen, itxaron mesedez ...</string>
-  <string name="MessageDisplayHelper_message_encrypted_for_non_existing_session">Existitzen ez den saio baterako zifratutako mezua...</string>
   <!--EncryptingSmsDatabase-->
   <string name="EncryptingSmsDatabase_error_decrypting_message">Mezua deszifratzerakoan errorea.</string>
   <!--ThreadDatabase-->
@@ -517,8 +521,6 @@ Gakoaren elkar-trukeraro mezua jaso da protokoloaren bertsio baliogabe baterako.
   <string name="MmsDatabase_error_decrypting_message">Mezua deszifratzerakoan errorea.</string>
   <!--MmsMessageRecord-->
   <string name="MmsMessageRecord_decrypting_mms_please_wait">MMSa deszifratzen, itxaron mesedez...</string>
-  <string name="MmsMessageRecord_bad_encrypted_mms_message">MMS mezua gaizki zifratu da...</string>
-  <string name="MmsMessageRecord_mms_message_encrypted_for_non_existing_session">Zifratutako MMS mezu zifratua existitzen ez den saio baterako...</string>
   <!--MuteDialog-->
   <string name="MuteDialog_mute_notifications">Desaktibatu jakinarazpenak</string>
   <!--ApplicationMigrationService-->
@@ -531,10 +533,15 @@ Gakoaren elkar-trukeraro mezua jaso da protokoloaren bertsio baliogabe baterako.
   <string name="KeyCachingService_signal_passphrase_cached_with_lock">Ukitu irekitzeko, edo sarraila ukitu ixteko.</string>
   <string name="KeyCachingService_passphrase_cached">Signal desblokeatuta dago</string>
   <string name="KeyCachingService_lock">Blokeatu pasahitz bat erabiliz</string>
+  <!--MediaPreviewActivity-->
+  <string name="MediaPreviewActivity_you">Zu</string>
+  <string name="MediaPreviewActivity_cant_display">Ezgai irudi honen aurrebista sortzeko</string>
+  <string name="MediaPreviewActivity_unssuported_media_type">Euskarri mota ez-onartua</string>
+  <string name="MediaPreviewActivity_draft">Zirriborroa</string>
   <!--MessageNotifier-->
   <string name="MessageNotifier_d_new_messages_in_d_conversations">%1$d mezu berri %2$d solasalditan</string>
   <string name="MessageNotifier_most_recent_from_s">Berriena %1$s-(e)tik</string>
-  <string name="MessageNotifier_locked_message">Mezu blokeatuta...</string>
+  <string name="MessageNotifier_locked_message">Mezua blokeatuta</string>
   <string name="MessageNotifier_media_message_with_text">Multimedia mezua: %s</string>
   <string name="MessageNotifier_no_subject">(Ez dago gairik)</string>
   <string name="MessageNotifier_message_delivery_failed">Mezuaren banaketak huts egin du.</string>
@@ -544,19 +551,41 @@ Gakoaren elkar-trukeraro mezua jaso da protokoloaren bertsio baliogabe baterako.
   <string name="MessageNotifier_mark_read">Markatu irakurritako gisa</string>
   <string name="MessageNotifier_media_message">Multimedia mezua</string>
   <string name="MessageNotifier_reply">Erantzun</string>
+  <!--MmsPreferencesFragment-->
+  <string name="MmsPreferencesFragment__manual_mms_settings_are_required">MMS eskuzko ezarpenak behar dira zure telefonorako.</string>
+  <string name="MmsPreferencesFragment__enabled">Gaituta</string>
+  <string name="MmsPreferencesFragment__disabled">Ezgaituta</string>
+  <string name="MmsPreferencesFragment__not_set">Ez ezarria</string>
+  <string name="MmsPreferencesFragment__invalid_uri">Sartutako testua URI baliogabea da</string>
+  <string name="MmsPreferencesFragment__invalid_host">Sartutako testua host baliogabea da</string>
   <!--QuickResponseService-->
   <string name="QuickResponseService_quick_response_unavailable_when_Signal_is_locked">Erantzun bizkorra eskuraezina Signal blokeatuta badago!</string>
   <string name="QuickResponseService_problem_sending_message">Arazoa mezua bidaltzen!</string>
+  <!--SaveAttachmentTask-->
   <!--SingleRecipientNotificationBuilder-->
   <string name="SingleRecipientNotificationBuilder_signal">Signal</string>
   <string name="SingleRecipientNotificationBuilder_new_message">Mezu berria</string>
+  <!--VideoPlayer-->
+  <string name="VideoPlayer_error_playing_video">Bideoa ikusterakoan huts egin du</string>
+  <!--WebRtcCallScreen-->
+  <string name="WebRtcCallScreen_you_may_wish_to_verify_this_contact">Agian zure segurasun zenbakia kontatu honekin baieztatu nahi duzu.</string>
+  <string name="WebRtcCallScreen_new_safety_number_title">Segurtasun zenbaki berria</string>
+  <!--WebRtcCallControls-->
   <!--attachment_type_selector-->
   <string name="attachment_type_selector__image">Irudia</string>
+  <string name="attachment_type_selector__image_description">Irudia</string>
   <string name="attachment_type_selector__audio">Audioa</string>
+  <string name="attachment_type_selector__audio_description">Audioa</string>
   <string name="attachment_type_selector__video">Bideoa</string>
+  <string name="attachment_type_selector__video_description">Bideoa</string>
   <string name="attachment_type_selector__contact">Kontaktua</string>
+  <string name="attachment_type_selector__contact_description">Kontaktua</string>
   <string name="attachment_type_selector__camera">Kamera</string>
+  <string name="attachment_type_selector__camera_description">Kamera</string>
   <string name="attachment_type_selector__location">Kokalekua</string>
+  <string name="attachment_type_selector__location_description">Kokalekua</string>
+  <string name="attachment_type_selector__gif">GIF</string>
+  <string name="attachment_type_selector__gif_description">Gif</string>
   <!--change_passphrase_activity-->
   <string name="change_passphrase_activity__old_passphrase">Aurreko pasahitza</string>
   <string name="change_passphrase_activity__new_passphrase">Pasahitz berria</string>
@@ -571,15 +600,11 @@ Gakoaren elkar-trukeraro mezua jaso da protokoloaren bertsio baliogabe baterako.
   <!--ContactSelectionListFragment-->
   <string name="ContactSelectionlistFragment_select_for">Hautatu egiteko...</string>
   <!--blocked_contacts_fragment-->
-  <string name="blocked_contacts_fragment__no_blocked_contacts">Blokeatutako kontaturik ez...</string>
   <!--contact_selection_recent_activity-->
   <string name="contact_selection_recent_activity__no_recent_calls">Ez dago azken deirik.</string>
   <!--conversation_title_view-->
   <string name="conversation_title_view__conversation_muted">Solasaldi isildua</string>
   <!--conversation_activity-->
-  <string name="conversation_activity__type_message_push">Bidali Signal mezua</string>
-  <string name="conversation_activity__type_message_sms_insecure">SMS ez segurua bidali</string>
-  <string name="conversation_activity__type_message_mms_insecure">MMS ez segurua bidali</string>
   <string name="conversation_activity__from_sim_name">%1$s-(e)tik</string>
   <string name="conversation_activity__send">Bidali</string>
   <string name="conversation_activity__remove">Ezabatu</string>
@@ -587,7 +612,7 @@ Gakoaren elkar-trukeraro mezua jaso da protokoloaren bertsio baliogabe baterako.
   <string name="conversation_activity__compose_description">Mezuaren konposizioa</string>
   <string name="conversation_activity__emoji_toggle_description">Emoji teklatua aktibatu/desaktibatu</string>
   <string name="conversation_activity__attachment_thumbnail">Eranskinerako koadro txikia</string>
-  <string name="conversation_activity__quick_attachment_drawer_toggle_description">Erakutsi edo ezkutatu eraskinak</string>
+  <string name="conversation_activity__enable_signal_for_sms">Aktibatu Signal SMSetarako</string>
   <!--conversation_input_panel-->
   <string name="conversation_input_panel__slide_to_cancel">LERRATU UZTEKO</string>
   <!--conversation_item-->
@@ -604,9 +629,14 @@ Gakoaren elkar-trukeraro mezua jaso da protokoloaren bertsio baliogabe baterako.
   <string name="conversation_item_received__download">Behera kargatu</string>
   <string name="conversation_item_received__contact_photo_description">Kontaktuaren argazkia</string>
   <string name="conversation_item_received__downloading">Behera kargatzen</string>
+  <!--audio_view-->
+  <string name="audio_view__play_accessibility_description">Play</string>
+  <string name="audio_view__pause_accessibility_description">Pausatu</string>
+  <string name="audio_view__download_accessibility_description">Deskargatu</string>
   <!--conversation_fragment_cab-->
   <string name="conversation_fragment_cab__batch_selection_mode">Batch hautatzeko modua</string>
   <string name="conversation_fragment_cab__batch_selection_amount">%s hautatua</string>
+  <!--conversation_fragment-->
   <!--country_selection_fragment-->
   <string name="country_selection_fragment__loading_countries">Herrialdeak kargatzen...</string>
   <string name="country_selection_fragment__search">Bilatu</string>
@@ -615,7 +645,6 @@ Gakoaren elkar-trukeraro mezua jaso da protokoloaren bertsio baliogabe baterako.
   <!--device_link_fragment-->
   <string name="device_link_fragment__link_device">Lotu gailua</string>
   <!--device_list_fragment-->
-  <string name="device_list_fragment__no_devices_linked">Ez dago gailurik lotuta.</string>
   <string name="device_list_fragment__link_new_device">Lotu gailu berria</string>
   <!--experience_upgrade_activity-->
   <string name="experience_upgrade_activity__continue">jarraitu</string>
@@ -649,6 +678,10 @@ Gakoaren elkar-trukeraro mezua jaso da protokoloaren bertsio baliogabe baterako.
   <!--giphy_activity-->
   <string name="giphy_activity_toolbar__search_gifs_and_stickers">GIF eta eranskailuak bilatu</string>
   <!--giphy_fragment-->
+  <string name="giphy_fragment__nothing_found">Ez da ezer aurkitu</string>
+  <!--import_export_fragment-->
+  <string name="import_export_fragment__export">Esportatu</string>
+  <string name="import_export_fragment__import">Inportatu</string>
   <!--log_submit_activity-->
   <string name="log_submit_activity__log_fetch_failed">Ezin izan da gailuko erregistroa irakurri.  Dena den, ordenagailuko ADB programa erabil dezakezu arazketa-erregistroa eskuratzeko.</string>
   <string name="log_submit_activity__thanks">Eskerrik asko zure laguntzagatik!</string>
@@ -677,23 +710,15 @@ Inportatu \'SMSBackup and Restorekin\' bateragarria den zifratu gabeko babeskopi
   <!--load_more_header-->
   <string name="load_more_header__see_full_conversation">Ikusi solasaldi osoa</string>
   <!--media_overview_activity-->
-  <string name="media_overview_activity__no_images">Irudirik ez</string>
   <!--message_recipients_list_item-->
   <string name="message_recipients_list_item__verify">EGIAZTATU</string>
   <string name="message_recipients_list_item__resend">BIRBIDALI</string>
-  <!--MmsPreferencesFragment-->
-  <string name="MmsPreferencesFragment__manual_mms_settings_are_required">MMS eskuzko ezarpenak behar dira zure telefonorako.</string>
-  <string name="MmsPreferencesFragment__enabled">Gaituta</string>
-  <string name="MmsPreferencesFragment__disabled">Ezgaituta</string>
-  <string name="MmsPreferencesFragment__not_set">Ez ezarria</string>
-  <string name="MmsPreferencesFragment__invalid_uri">Sartutako testua URI baliogabea da</string>
-  <string name="MmsPreferencesFragment__invalid_host">Sartutako testua host baliogabea da</string>
+  <string name="message_recipients_list_item__resending">Birbidaltzen... </string>
   <!--GroupUtil-->
   <plurals name="GroupUtil_joined_the_group">
     <item quantity="one">%1$s taldean sartu da.</item>
     <item quantity="other">%1$s taldean sartu dira.</item>
   </plurals>
-  <string name="GroupUtil_group_updated">Taldea eguneratuta.</string>
   <string name="GroupUtil_group_name_is_now">Taldeak \'%1$s\' izena du orain.</string>
   <!--prompt_passphrase_activity-->
   <string name="prompt_passphrase_activity__unlock">Desblokeatu</string>
@@ -710,7 +735,7 @@ Inportatu \'SMSBackup and Restorekin\' bateragarria den zifratu gabeko babeskopi
   <string name="recipient_preferences__block">Blokeatu</string>
   <string name="recipient_preferences__color">Kolorea</string>
   <string name="recipient_preferences__color_for_this_contact">Kontaktu honentzako kolorea</string>
-  <string name="recipient_preferences__verify_safety_numbers">Egiaztatu segurtasun zenbakiak</string>
+  <string name="recipient_preferences__verify_safety_number">Segurtasun zenbakia baieztatu</string>
   <!--- redphone_call_controls-->
   <string name="redphone_call_card__signal_call">Signal deia</string>
   <string name="redphone_call_controls__end_call">amaitu deia</string>
@@ -728,7 +753,6 @@ TELEFONO ZENBAKIA
 </string>
   <string name="registration_activity__phone_number">TELEFONO ZENBAKIA</string>
   <string name="registration_activity__register">Erregistratu</string>
-  <string name="registration_activity__registration_will_transmit_some_contact_information_to_the_server_temporariliy">Erregistratzeak kontakturako informazioa igortzen du zerbitzarira. Ez da gordetzen.</string>
   <string name="registration_activity__powered_by_twilio">twilio-k bultzatuta</string>
   <!--registration_problems-->
   <string name="registration_problems__some_possible_problems_include">Aurreikusi daitezkeen arazo 
@@ -800,11 +824,9 @@ huts egin du.
   <string name="AndroidManifest__select_contacts">Kontaktuak hautatu</string>
   <string name="AndroidManifest__signal_detected">Signal detektatu da</string>
   <string name="AndroidManifest__change_passphrase">Pasahitza aldatu</string>
-  <string name="AndroidManifest__verify_safety_numbers">Egiaztatu segurtasun zenbakiak</string>
+  <string name="AndroidManifest__verify_safety_number">Segurtasun zenbakia baieztatu</string>
   <string name="AndroidManifest__log_submit">Bidali arazketa-erregistroa</string>
   <string name="AndroidManifest__media_preview">Multimediaren aurrebista</string>
-  <string name="AndroidManifest__media_overview">Irudi guztiak</string>
-  <string name="AndroidManifest__media_overview_named">%1$s-(r)ekiko irudi guztiak</string>
   <string name="AndroidManifest__message_details">Mezuaren xehetasunak</string>
   <string name="AndroidManifest__linked_devices">Lotutako gailuak</string>
   <string name="AndroidManifest__invite_friends">Gonbidatu lagunak</string>
@@ -827,6 +849,7 @@ huts egin du.
   <string name="arrays__images">Irudiak</string>
   <string name="arrays__audio">Audioa</string>
   <string name="arrays__video">Bideoa</string>
+  <string name="arrays__normal">Normala</string>
   <!--plurals.xml-->
   <plurals name="hours_ago">
     <item quantity="one">ordu %d</item>
@@ -868,7 +891,6 @@ huts egin du.
   <string name="preferences__pref_led_blink_custom_pattern_off_for">Zenbat denbora itzalita:</string>
   <string name="preferences__pref_led_blink_custom_pattern_set">Personalizatutako LED keinu eredua ezarrita!</string>
   <string name="preferences__sound">Soinua</string>
-  <string name="preferences__change_notification_sound">Aldatu jakinarazpenaren soinua</string>
   <string name="preferences__silent">Isildu</string>
   <string name="preferences__in_conversation_notifications">Solasaldi barruko jakinarazpenak</string>
   <string name="preferences__play_inthread_notifications">Erreproduzitu jakinarazpena solasaldi aktibo bat ikusterakoan.</string>
@@ -927,7 +949,7 @@ huts egin du.
   <string name="preferences__support_wifi_calling">\'\"WiFi Calling\' modu bateragarria</string>
   <string name="preferences__enable_if_your_device_supports_sms_mms_delivery_over_wifi">Aktibatu zure gailuak WiFi bidezko SMS/MMS banaketa erabiltzen badu (bakarrik aktibatu \'WiFi Calling\' aktibatuta badago zure gailuan).</string>
   <string name="preferences_app_protection__blocked_contacts">Blokeatutako kontaktuak</string>
-  <string name="preferences_app_protection__safety_numbers_approval">Segurtazun zenbakien onarpena</string>
+  <string name="preferences_app_protection__safety_numbers_approval">Segurtasun zenbakien onarpena</string>
   <string name="preferences_app_protecting__require_approval_of_new_safety_numbers_when_they_change">Eskatu segurtasun zenbaki berrien onarpena hauek aldatzean</string>
   <string name="preferences_notifications__display_in_notifications">Erakutsi jakinarazpenetan</string>
   <string name="preferences_chats__when_using_mobile_data">Datu mugikorrak erabiltzerakoan</string>
@@ -991,10 +1013,9 @@ huts egin du.
   <string name="conversation_unmuted__mute_notifications">Desaktibatu jakinarazpenak</string>
   <!--conversation-->
   <string name="conversation__menu_add_attachment">Eranskina gehitu</string>
-  <string name="conversation__menu_update_group">Taldea eguneratu</string>
+  <string name="conversation__menu_edit_group">Taldea editatu</string>
   <string name="conversation__menu_leave_group">Taldea utzi</string>
   <string name="conversation__menu_delete_thread">Ezabatu solasaldia</string>
-  <string name="conversation__menu_view_media">Irudi guztiak</string>
   <string name="conversation__menu_conversation_settings">Solasaldiaren ezarpenak</string>
   <!--conversation_popup-->
   <string name="conversation_popup__menu_expand_popup">Zabaldu leihoa</string>
@@ -1017,6 +1038,9 @@ huts egin du.
   <string name="text_secure_normal__mark_all_as_read">Irakurritako gisa markatu guztiak</string>
   <string name="text_secure_normal__invite_friends">Gonbidatu lagunak</string>
   <string name="text_secure_normal__help">Laguntza</string>
+  <!--verify_display_fragment-->
+  <string name="verify_display_fragment_context_menu__copy_to_clipboard">Arbelera kopiatu</string>
+  <string name="verify_display_fragment_context_menu__compare_with_clipboard">Arbelarekin konparatu</string>
   <!--reminder_header-->
   <string name="reminder_header_outdated_build">Zure Signal bertsioa zaharkitua dago</string>
   <plurals name="reminder_header_outdated_build_details">
@@ -1043,16 +1067,13 @@ huts egin du.
   <string name="reminder_header_share_text">Zenbat eta Signalen adiskide gehiago izan, hobe.</string>
   <string name="reminder_header_share_button">PARTEKATU</string>
   <string name="reminder_header_close_button">ITXI</string>
-  <!--MediaPreviewActivity-->
-  <string name="MediaPreviewActivity_you">Zu</string>
-  <string name="MediaPreviewActivity_cant_display">Ezgai irudi honen aurrebista sortzeko</string>
-  <string name="MediaPreviewActivity_unssuported_media_type">Euskarri mota ez-onartua</string>
   <!--media_preview-->
   <string name="media_preview__save_title">Gorde</string>
+  <string name="media_preview__forward_title">Birbidali</string>
   <!--media_overview-->
   <string name="media_overview__save_all">Dena gorde</string>
   <!--media_preview_activity-->
-  <string name="media_preview_activity__image_content_description">Irudiaren aurrebista</string>
+  <string name="media_preview_activity__media_content_description">Multimediaren aurrebista</string>
   <!--new_conversation_activity-->
   <string name="new_conversation_activity__refresh">Freskatu</string>
   <!--redphone_audio_popup_menu-->

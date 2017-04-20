@@ -53,7 +53,6 @@ public class SingleRecipientNotificationBuilder extends AbstractNotificationBuil
     setColor(context.getResources().getColor(R.color.textsecure_primary));
     setPriority(NotificationCompat.PRIORITY_HIGH);
     setCategory(NotificationCompat.CATEGORY_MESSAGE);
-    setDeleteIntent(PendingIntent.getBroadcast(context, 0, new Intent(MessageNotifier.DeleteReceiver.DELETE_REMINDER_ACTION), 0));
   }
 
   public void setThread(@NonNull Recipients recipients) {
@@ -101,6 +100,27 @@ public class SingleRecipientNotificationBuilder extends AbstractNotificationBuil
     }
   }
 
+  public void addAndroidAutoAction(@NonNull PendingIntent androidAutoReplyIntent,
+                                   @NonNull PendingIntent androidAutoHeardIntent, long timestamp)
+  {
+
+    if (mContentTitle == null || mContentText == null)
+      return;
+
+    RemoteInput remoteInput = new RemoteInput.Builder(AndroidAutoReplyReceiver.VOICE_REPLY_KEY)
+                                  .setLabel(context.getString(R.string.MessageNotifier_reply))
+                                  .build();
+
+    NotificationCompat.CarExtender.UnreadConversation.Builder unreadConversationBuilder =
+            new NotificationCompat.CarExtender.UnreadConversation.Builder(mContentTitle.toString())
+                .addMessage(mContentText.toString())
+                .setLatestTimestamp(timestamp)
+                .setReadPendingIntent(androidAutoHeardIntent)
+                .setReplyAction(androidAutoReplyIntent, remoteInput);
+
+    extend(new NotificationCompat.CarExtender().setUnreadConversation(unreadConversationBuilder.build()));
+  }
+
   public void addActions(@Nullable MasterSecret masterSecret,
                          @NonNull PendingIntent markReadIntent,
                          @NonNull PendingIntent quickReplyIntent,
@@ -115,10 +135,19 @@ public class SingleRecipientNotificationBuilder extends AbstractNotificationBuil
                                       context.getString(R.string.MessageNotifier_reply),
                                       quickReplyIntent);
 
+      if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+        replyAction = new Action.Builder(R.drawable.ic_reply_white_36dp,
+                                         context.getString(R.string.MessageNotifier_reply),
+                                         wearableReplyIntent)
+            .addRemoteInput(new RemoteInput.Builder(MessageNotifier.EXTRA_REMOTE_REPLY)
+                                .setLabel(context.getString(R.string.MessageNotifier_reply)).build())
+            .build();
+      }
+
       Action wearableReplyAction = new Action.Builder(R.drawable.ic_reply,
                                                       context.getString(R.string.MessageNotifier_reply),
                                                       wearableReplyIntent)
-          .addRemoteInput(new RemoteInput.Builder(MessageNotifier.EXTRA_VOICE_REPLY)
+          .addRemoteInput(new RemoteInput.Builder(MessageNotifier.EXTRA_REMOTE_REPLY)
                               .setLabel(context.getString(R.string.MessageNotifier_reply)).build())
           .build();
 
