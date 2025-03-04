@@ -160,17 +160,23 @@ class EnterPhoneNumberFragment : LoggingFragment(R.layout.fragment_registration_
         handleRegistrationErrorResponse(it)
         sharedViewModel.registerAccountErrorShown()
       }
-
-      if (sharedState.challengesRequested.contains(Challenge.CAPTCHA) && sharedState.captchaToken.isNotNullOrBlank()) {
-        sharedViewModel.submitCaptchaToken(requireContext())
-      } else if (sharedState.challengesRemaining.isNotEmpty()) {
-        handleChallenges(sharedState.challengesRemaining)
-      } else if (sharedState.registrationCheckpoint >= RegistrationCheckpoint.PHONE_NUMBER_CONFIRMED && sharedState.canSkipSms) {
-        moveToEnterPinScreen()
-      } else if (sharedState.registrationCheckpoint >= RegistrationCheckpoint.VERIFICATION_CODE_REQUESTED) {
-        moveToVerificationEntryScreen()
-      }
     }
+
+    sharedViewModel
+      .uiState
+      .map { it.toNavigationStateOnly() }
+      .distinctUntilChanged()
+      .observe(viewLifecycleOwner) { sharedState ->
+        if (sharedState.challengesRequested.contains(Challenge.CAPTCHA) && sharedState.captchaToken.isNotNullOrBlank()) {
+          sharedViewModel.submitCaptchaToken(requireContext())
+        } else if (sharedState.challengesRemaining.isNotEmpty()) {
+          handleChallenges(sharedState.challengesRemaining)
+        } else if (sharedState.registrationCheckpoint >= RegistrationCheckpoint.PHONE_NUMBER_CONFIRMED && sharedState.canSkipSms) {
+          moveToEnterPinScreen()
+        } else if (sharedState.registrationCheckpoint >= RegistrationCheckpoint.VERIFICATION_CODE_REQUESTED) {
+          moveToVerificationEntryScreen()
+        }
+      }
 
     fragmentViewModel
       .uiState
@@ -187,6 +193,7 @@ class EnterPhoneNumberFragment : LoggingFragment(R.layout.fragment_registration_
     fragmentViewModel.uiState.observe(viewLifecycleOwner) { fragmentState ->
       if (fragmentViewModel.isEnteredNumberPossible(fragmentState)) {
         sharedViewModel.setPhoneNumber(fragmentViewModel.parsePhoneNumber(fragmentState))
+        sharedViewModel.nationalNumber = ""
       } else {
         sharedViewModel.setPhoneNumber(null)
       }
@@ -201,12 +208,16 @@ class EnterPhoneNumberFragment : LoggingFragment(R.layout.fragment_registration_
     initializeInputFields()
 
     val existingPhoneNumber = sharedViewModel.phoneNumber
+    val existingNationalNumber = sharedViewModel.nationalNumber
     if (existingPhoneNumber != null) {
       fragmentViewModel.restoreState(existingPhoneNumber)
       spinnerView.setText(existingPhoneNumber.countryCode.toString())
       phoneNumberInputLayout.setText(existingPhoneNumber.nationalNumber.toString())
     } else if (spinnerView.text?.isEmpty() == true) {
       spinnerView.setText(fragmentViewModel.getDefaultCountryCode(requireContext()).toString())
+      phoneNumberInputLayout.setText(existingNationalNumber)
+    } else {
+      phoneNumberInputLayout.setText(existingNationalNumber)
     }
 
     if (enterPhoneNumberMode == EnterPhoneNumberMode.RESTART_AFTER_COLLECTION && (savedInstanceState == null && !processedResumeMode)) {
@@ -279,6 +290,7 @@ class EnterPhoneNumberFragment : LoggingFragment(R.layout.fragment_registration_
       afterTextChanged = {
         reformatText(it)
         fragmentViewModel.setPhoneNumber(it?.toString())
+        sharedViewModel.nationalNumber = it?.toString() ?: ""
       }
     )
 
