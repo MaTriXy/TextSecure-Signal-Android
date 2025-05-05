@@ -39,9 +39,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.os.bundleOf
 import androidx.core.widget.TextViewCompat
-import org.signal.core.ui.BottomSheets
-import org.signal.core.ui.SignalPreview
-import org.signal.core.ui.theme.SignalTheme
+import org.signal.core.ui.compose.BottomSheets
+import org.signal.core.ui.compose.SignalPreview
+import org.signal.core.ui.compose.theme.SignalTheme
 import org.signal.core.util.getParcelableCompat
 import org.signal.core.util.isNotNullOrBlank
 import org.thoughtcrime.securesms.AvatarPreviewActivity
@@ -50,11 +50,12 @@ import org.thoughtcrime.securesms.avatar.AvatarImage
 import org.thoughtcrime.securesms.components.emoji.EmojiTextView
 import org.thoughtcrime.securesms.compose.ComposeBottomSheetDialogFragment
 import org.thoughtcrime.securesms.conversation.v2.UnverifiedProfileNameBottomSheet
+import org.thoughtcrime.securesms.groups.ui.incommon.GroupsInCommonActivity
 import org.thoughtcrime.securesms.nicknames.ViewNoteSheet
-import org.thoughtcrime.securesms.phonenumbers.PhoneNumberFormatter
 import org.thoughtcrime.securesms.recipients.Recipient
 import org.thoughtcrime.securesms.recipients.RecipientId
 import org.thoughtcrime.securesms.stories.settings.my.SignalConnectionsBottomSheetDialogFragment
+import org.thoughtcrime.securesms.util.SignalE164Util
 import org.thoughtcrime.securesms.util.viewModel
 
 /**
@@ -103,7 +104,7 @@ class AboutSheet : ComposeBottomSheetDialogFragment() {
           hasAvatar = recipient.get().profileAvatarFileDetails.hasFile(),
           recipientForAvatar = recipient.get(),
           formattedE164 = if (recipient.get().hasE164 && recipient.get().shouldShowE164) {
-            PhoneNumberFormatter.get(requireContext()).prettyPrintFormat(recipient.get().requireE164())
+            SignalE164Util.prettyPrint(recipient.get().requireE164())
           } else {
             null
           },
@@ -115,7 +116,8 @@ class AboutSheet : ComposeBottomSheetDialogFragment() {
         onClickSignalConnections = this::openSignalConnectionsSheet,
         onAvatarClicked = this::openProfilePhotoViewer,
         onNoteClicked = this::openNoteSheet,
-        onUnverifiedProfileClicked = this::openUnverifiedProfileSheet
+        onUnverifiedProfileClicked = this::openUnverifiedProfileSheet,
+        onGroupsInCommonClicked = this::openGroupsInCommon
       )
     }
   }
@@ -137,6 +139,11 @@ class AboutSheet : ComposeBottomSheetDialogFragment() {
   private fun openUnverifiedProfileSheet() {
     dismiss()
     UnverifiedProfileNameBottomSheet.show(fragmentManager = parentFragmentManager, forGroup = false)
+  }
+
+  private fun openGroupsInCommon() {
+    dismiss()
+    startActivity(GroupsInCommonActivity.createIntent(requireContext(), recipientId))
   }
 }
 
@@ -162,7 +169,8 @@ private fun Content(
   onClickSignalConnections: () -> Unit,
   onAvatarClicked: () -> Unit,
   onNoteClicked: () -> Unit,
-  onUnverifiedProfileClicked: () -> Unit = {}
+  onUnverifiedProfileClicked: () -> Unit = {},
+  onGroupsInCommonClicked: () -> Unit = {}
 ) {
   Box(
     contentAlignment = Alignment.Center,
@@ -303,6 +311,8 @@ private fun Content(
       AboutRow(
         startIcon = groupsInCommonIcon,
         text = groupsInCommonText,
+        endIcon = if (model.groupsInCommon > 0) ImageVector.vectorResource(id = R.drawable.symbol_chevron_right_compact_bold_16) else null,
+        onClick = if (model.groupsInCommon > 0) onGroupsInCommonClicked else null,
         modifier = Modifier.fillMaxWidth()
       )
     }

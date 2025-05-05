@@ -3,7 +3,6 @@ package org.thoughtcrime.securesms.database.helpers
 import android.app.Application
 import android.content.Context
 import android.database.sqlite.SQLiteException
-import net.zetetic.database.sqlcipher.SQLiteDatabase
 import org.signal.core.util.areForeignKeyConstraintsEnabled
 import org.signal.core.util.logging.Log
 import org.thoughtcrime.securesms.database.SignalDatabase
@@ -123,6 +122,13 @@ import org.thoughtcrime.securesms.database.helpers.migration.V264_FixGroupAddMem
 import org.thoughtcrime.securesms.database.helpers.migration.V265_FixFtsTriggers
 import org.thoughtcrime.securesms.database.helpers.migration.V266_UniqueThreadPinOrder
 import org.thoughtcrime.securesms.database.helpers.migration.V267_FixGroupInvitationDeclinedUpdate
+import org.thoughtcrime.securesms.database.helpers.migration.V268_FixInAppPaymentsErrorStateConsistency
+import org.thoughtcrime.securesms.database.helpers.migration.V269_BackupMediaSnapshotChanges
+import org.thoughtcrime.securesms.database.helpers.migration.V270_FixChatFolderColumnsForStorageSync
+import org.thoughtcrime.securesms.database.helpers.migration.V271_AddNotificationProfileIdColumn
+import org.thoughtcrime.securesms.database.helpers.migration.V272_UpdateUnreadCountIndices
+import org.thoughtcrime.securesms.database.helpers.migration.V273_FixUnreadOriginalMessages
+import org.thoughtcrime.securesms.database.SQLiteDatabase as SignalSqliteDatabase
 
 /**
  * Contains all of the database migrations for [SignalDatabase]. Broken into a separate file for cleanliness.
@@ -249,13 +255,19 @@ object SignalDatabaseMigrations {
     264 to V264_FixGroupAddMemberUpdate,
     265 to V265_FixFtsTriggers,
     266 to V266_UniqueThreadPinOrder,
-    267 to V267_FixGroupInvitationDeclinedUpdate
+    267 to V267_FixGroupInvitationDeclinedUpdate,
+    268 to V268_FixInAppPaymentsErrorStateConsistency,
+    269 to V269_BackupMediaSnapshotChanges,
+    270 to V270_FixChatFolderColumnsForStorageSync,
+    271 to V271_AddNotificationProfileIdColumn,
+    272 to V272_UpdateUnreadCountIndices,
+    273 to V273_FixUnreadOriginalMessages
   )
 
-  const val DATABASE_VERSION = 267
+  const val DATABASE_VERSION = 273
 
   @JvmStatic
-  fun migrate(context: Application, db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
+  fun migrate(context: Application, db: SignalSqliteDatabase, oldVersion: Int, newVersion: Int) {
     val initialForeignKeyState = db.areForeignKeyConstraintsEnabled()
 
     for (migrationData in migrations) {
